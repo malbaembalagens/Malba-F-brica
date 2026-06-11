@@ -413,6 +413,8 @@ tbody tr:hover{background:var(--surface-2)}
 .vinco:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .vinco.bad{border-color:var(--red);background:var(--red-soft);color:var(--red)}
 .vincoadd{width:44px;height:44px;border-radius:11px;background:var(--dark);color:#fff;border:none;font-size:22px;cursor:pointer;line-height:1}
+.vincozero{height:44px;padding:0 16px;border-radius:11px;background:var(--surface-2);color:var(--muted);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer}
+.vincozero:hover{border-color:var(--red);color:var(--red)}
 .chkrow{display:flex;align-items:center;gap:9px;font-size:14px;margin:14px 0;cursor:pointer}
 .chkrow input{width:18px;height:18px}
 .pdfdrop{border:1.5px dashed var(--border-2);border-radius:14px;padding:26px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
@@ -557,7 +559,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v40 · dados salvos neste aparelho</div>
+    <div class="foot">v41 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -1498,7 +1500,7 @@ function devChapaInfo(x){
   const e=x.entry||{}, it=x.it;
   const onda=ondas.find(o=>o.nome===(e.ondaNome||it.ondaNome));
   const comp=e.comp||(onda&&onda.comp)||compPadrao(it.ondaNome);
-  const f={ c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp, chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp, chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
   return chapaDims(f);
 }
 function renderDesenv(){
@@ -1557,7 +1559,7 @@ function excluirDev(key){
 function fichaTecnica(key){
   const x=devItems().find(d=>d.key===key); if(!x) return;
   const it=x.it, e=x.entry||{}, d=devChapaInfo(x);
-  const f={ c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
   const peso=chapaPeso(f), custo=chapaCusto(f);
   const tipoLbl={nenhum:"Nenhum",meia:"Meia chapa",dupla:"Chapa dupla",contra:"Contra onda"}[f.chapaTipo||"nenhum"];
   const c=e.comp||compPadrao(it.ondaNome);
@@ -1785,7 +1787,7 @@ function ocAddPick(){
   const q=Math.max(1,parseInt(window._ocq)||0);
   const x=ocDevList().find(d=>d.key===ocForm._pickKey); if(!x){ alert("Produto não encontrado."); return; }
   const it=x.it, e=x.entry||{}, d=devChapaInfo(x);
-  const f={ c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum" };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
   ocForm.itens.push({ key:x.key, sku:e.sku||"", produto:it.produto, c:it.c,l:it.l,a:it.a, chapaComp:Math.round(d.comp), chapaLarg:Math.round(d.larg), gram:f.gram, ondaNome:it.ondaNome, vincos:(e.vincos||[]).slice(), qtd:q, pesoUnit:chapaPeso(f) });
   ocForm._pickKey=""; window._ocb=""; window._ocq=""; renderNovaOC();
 }
@@ -1988,6 +1990,8 @@ function abrirDesenvWizard(key){
     fornecedor: s.fornecedor||"", tipo: s.tipo||"Loja",
     comp: s.comp?JSON.parse(JSON.stringify(s.comp)):JSON.parse(JSON.stringify(compBase)),
     chapaTipo: s.chapaTipo||"nenhum",
+    chapaComp: s.chapaComp!=null?s.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c),
+    chapaLarg: s.chapaLarg!=null?s.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l),
     vincos: Array.isArray(s.vincos)&&s.vincos.length? s.vincos.slice() : null,
     codigoCliche: s.codigoCliche||"", refCliente: s.refCliente||"", cor1: s.cor1||"", cor2: s.cor2||"",
     logoMalba: !!s.logoMalba, pdfNome: s.pdfNome||"", pdfData: s.pdfData||"",
@@ -1996,9 +2000,11 @@ function abrirDesenvWizard(key){
   devStep=1; show("tela-desenv-wizard"); renderWizard();
 }
 function wizOnda(nome){ devForm.ondaNome=nome; const o=ondas.find(x=>x.nome===nome); devForm.gram=(o&&o.gramaturas[0])||0; devForm.comp=(o&&o.comp)?JSON.parse(JSON.stringify(o.comp)):compPadrao(nome); renderWizard(); }
-function wizNav(d){ devStep=Math.min(5,Math.max(1,devStep+d)); saveDraft(); renderWizard(); }
+function stepSeq(){ return isCustom(devForm)?[1,2,4,5]:[1,2,3,4,5]; }
+function wizNav(d){ const seq=stepSeq(); let idx=seq.indexOf(devStep); if(idx<0) idx=0; idx=Math.min(seq.length-1,Math.max(0,idx+d)); devStep=seq[idx]; saveDraft(); renderWizard(); }
 // --- cálculos da chapa (etapa 4) ---
 function chapaDims(f){
+  if(isCustom(f) && (+f.chapaComp||+f.chapaLarg)) return { comp:Math.round((+f.chapaComp||0)*100)/100, larg:Math.round((+f.chapaLarg||0)*100)/100 };
   const t=compTotais({comp:f.comp});
   let comp=2*((+f.c||0)+(+f.l||0))+t.abaComp;
   let larg=(+f.l||0)+(+f.a||0)+t.folgaLarg;
@@ -2011,7 +2017,18 @@ function chapaDims(f){
 function fornCusto(nome){ const x=fornecedores.find(o=>o.nome===nome); return x?(+x.custo||0):0; }
 function chapaPeso(f){ const d=chapaDims(f); return (d.comp*d.larg/1e6)*(+f.gram||0)/1000; } // kg
 function chapaCusto(f){ return fornCusto(f.fornecedor)*chapaPeso(f); }
-function vincosPadrao(f){ const half=(+f.l||0)/2; return [half, (+f.a||0)+(+(f.comp&&f.comp.altura)||0), half]; }
+function vincosPadrao(f){
+  if(isCustom(f)) return [0,0,0];
+  const half=(+f.l||0)/2; const c=f.comp||{};
+  const v2=(+f.a||0)+(+c.altura||0)+(+c.abaInf||0)+(+c.abaSup||0);
+  return [half, v2, half];
+}
+const PROD_CUSTOM="Projeto customizável";
+function isCustom(f){ return !!(f && f.produto===PROD_CUSTOM); }
+function chapaDimsAny(f){ if(isCustom(f)) return { comp:Math.round((+f.chapaComp||0)*100)/100, larg:Math.round((+f.chapaLarg||0)*100)/100 }; return chapaDims(f); }
+function chapaPesoAny(f){ const d=chapaDimsAny(f); return (d.comp*d.larg/1e6)*(+f.gram||0)/1000; }
+function chapaCustoAny(f){ return fornCusto(f.fornecedor)*chapaPesoAny(f); }
+function zerarVincos(){ devForm.vincos=[0,0,0]; renderWizard(); }
 function vincosSoma(v){ return (v||[]).reduce((s,x)=>s+(+x||0),0); }
 function setChapaTipo(t){ devForm.chapaTipo=t; renderWizard(); }
 function addVinco(){ if(!Array.isArray(devForm.vincos)) devForm.vincos=vincosPadrao(devForm); devForm.vincos.push(0); renderWizard(); }
@@ -2027,14 +2044,18 @@ function saveDraft(){ const prev= String(devForm.key).startsWith("av:") ? devAvu
 function concluirWizard(){ if(!devForm.data) devForm.data=hojeStr(); persistDev(devForm,"desenvolvido"); show("tela-gestor"); irViewG("prod-desenv"); }
 
 // ---------- Desenvolvimento em massa (Excel) ----------
+function devColHead(){ return ["SKU","Produto","Comprimento (mm)","Largura (mm)","Altura (mm)","Onda","Gramatura (g/m²)","Fornecedor","Tipo (Loja/Cliente)","Refile","Lap","Largura 1","Comprimento 1","Largura 2","Comprimento 2","Aba superior","Aba inferior","Altura compensação","Tipo de chapa","Vinco 1","Vinco 2","Vinco 3","Comprimento chapa (mm)","Largura chapa (mm)","Código clichê","Referência cliente","Cor 1","Cor 2","Logo Malba (Sim/Não)"]; }
+function devToRow(a){ const c=a.comp||{}; const v=a.vincos||[]; return [a.sku||"",a.produto||"",a.c||0,a.l||0,a.a||0,a.ondaNome||"",a.gram||0,a.fornecedor||"",a.tipo||"Loja",c.refile||0,c.lap||0,c.larg1||0,c.comp1||0,c.larg2||0,c.comp2||0,c.abaSup||0,c.abaInf||0,c.altura||0,a.chapaTipo||"nenhum",+v[0]||0,+v[1]||0,+v[2]||0,a.chapaComp||0,a.chapaLarg||0,a.codigoCliche||"",a.refCliente||"",a.cor1||"",a.cor2||"",a.logoMalba?"Sim":"Não"]; }
 function extrairModelo(){
   if(typeof XLSX==="undefined"){ alert("Biblioteca de Excel ainda carregando. Tente de novo em alguns segundos (precisa de internet na primeira vez)."); return; }
-  const head=["SKU","Produto","Comprimento (mm)","Largura (mm)","Altura (mm)","Onda","Gramatura (g/m²)","Fornecedor","Tipo (Loja/Cliente)"];
-  const ex=["1234","Caixa de papelão pardo modelo maleta",290,200,200,"Onda T",280,"",("Loja")];
-  const ws=XLSX.utils.aoa_to_sheet([head,ex]);
-  ws["!cols"]=head.map(()=>({wch:22}));
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Produtos");
-  XLSX.writeFile(wb,"modelo-desenvolvimento-malba.xlsx");
+  const head=devColHead();
+  const rows=[head];
+  if(devAvulsos.length){ devAvulsos.forEach(a=>rows.push(devToRow(a))); }
+  else { rows.push(["1234","Caixa de papelão pardo modelo maleta",290,200,200,(ondas[0]?ondas[0].nome:"Onda B"),280,"","Loja",0,0,0,0,0,0,0,0,0,"nenhum",0,0,0,0,0,"","","","","Não"]); }
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"]=head.map(()=>({wch:20}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Desenvolvimento");
+  XLSX.writeFile(wb,"desenvolvimento-malba.xlsx");
 }
 function uploadModelo(input){
   const file=input.files[0]; if(!file) return;
@@ -2045,16 +2066,26 @@ function uploadModelo(input){
       const wb=XLSX.read(e.target.result,{type:"array"});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      const num=x=>parseFloat(String(x??"").replace(",","."))||0;
       let n=0;
       for(let i=1;i<rows.length;i++){ const r=rows[i]; if(!r) continue;
         const sku=String(r[0]??"").trim(); const prod=String(r[1]??"").trim();
         if(!sku && !prod) continue;
-        const ondaNome=String(r[5]??"").trim()||ondas[0].nome; const onda=ondas.find(o=>o.nome===ondaNome)||ondas[0];
+        const ondaNome=String(r[5]??"").trim()||(ondas[0]&&ondas[0].nome)||""; const onda=ondas.find(o=>o.nome===ondaNome)||ondas[0]||{nome:ondaNome,comp:compPadrao("")};
         const tipo=(String(r[8]??"").trim().toLowerCase().startsWith("cli"))?"Cliente":"Loja";
+        const compObj={ refile:num(r[9]), lap:num(r[10]), larg1:num(r[11]), comp1:num(r[12]), larg2:num(r[13]), comp2:num(r[14]), abaSup:num(r[15]), abaInf:num(r[16]), altura:num(r[17]) };
+        const temComp=[9,10,11,12,13,14,15,16,17].some(k=>String(r[k]??"").trim()!=="" && num(r[k])!==0);
+        const vincos=[num(r[19]),num(r[20]),num(r[21])];
+        const logo=String(r[28]??"").trim().toLowerCase().startsWith("s");
         devAvulsos.push({ key:"av:"+uid(), sku, produto:prod||"Produto",
-          c:+r[2]||0, l:+r[3]||0, a:+r[4]||0, ondaNome:onda.nome, gram:+r[6]||0,
+          c:num(r[2]), l:num(r[3]), a:num(r[4]), ondaNome:(onda.nome||ondaNome), gram:num(r[6]),
           fornecedor:String(r[7]??"").trim(), tipo,
-          comp:JSON.parse(JSON.stringify(onda.comp||compPadrao(onda.nome))),
+          comp: temComp?compObj:JSON.parse(JSON.stringify(onda.comp||compPadrao(onda.nome||""))),
+          chapaTipo:String(r[18]??"").trim()||"nenhum",
+          vincos: vincos.some(x=>x)?vincos:null,
+          chapaComp:num(r[22]), chapaLarg:num(r[23]),
+          codigoCliche:String(r[24]??"").trim(), refCliente:String(r[25]??"").trim(),
+          cor1:String(r[26]??"").trim(), cor2:String(r[27]??"").trim(), logoMalba:logo,
           qtd:0, data:hojeStr(), status:"desenvolvido" });
         n++;
       }
@@ -2077,18 +2108,21 @@ function novoDesenvolvimento(){
 function renderWizard(){
   const f=devForm, onda=ondas.find(o=>o.nome===f.ondaNome)||ondas[0];
   const title=`Caixa de papelão - ${f.c}×${f.l}×${f.a}mm - ${esc(f.ondaNome||"")} - ${f.gram}g`;
+  const seq=stepSeq(); const ci=seq.indexOf(devStep)<0?0:seq.indexOf(devStep);
   let steprow="";
-  for(let i=1;i<=5;i++){ steprow+=`<div class="dot ${i<devStep?"done":i===devStep?"cur":""}">${i<devStep?"✓":i}</div>`; if(i<5) steprow+=`<div class="line ${i<devStep?"done":""}"></div>`; }
+  seq.forEach((st,k)=>{ steprow+=`<div class="dot ${k<ci?"done":k===ci?"cur":""}">${k<ci?"✓":(k+1)}</div>`; if(k<seq.length-1) steprow+=`<div class="line ${k<ci?"done":""}"></div>`; });
   let content="";
   if(devStep===1){
-    content=`<div class="formcard"><div class="compgrid">
-      <div class="compf"><label>SKU *</label><input value="${esc(f.sku)}" placeholder="1234" oninput="devForm.sku=this.value"></div>
+    const dims = isCustom(f) ? "" : `
       <div class="compf"><label>Comprimento (mm) *</label><input type="number" inputmode="numeric" value="${f.c}" oninput="devForm.c=this.value"></div>
       <div class="compf"><label>Largura (mm) *</label><input type="number" inputmode="numeric" value="${f.l}" oninput="devForm.l=this.value"></div>
-      <div class="compf"><label>Altura (mm) *</label><input type="number" inputmode="numeric" value="${f.a}" oninput="devForm.a=this.value"></div>
+      <div class="compf"><label>Altura (mm) *</label><input type="number" inputmode="numeric" value="${f.a}" oninput="devForm.a=this.value"></div>`;
+    content=`<div class="formcard"><div class="compgrid">
+      <div class="compf"><label>SKU *</label><input value="${esc(f.sku)}" placeholder="1234" oninput="devForm.sku=this.value"></div>
+      ${dims}
       <div class="compf"><label>Onda *</label><select onchange="wizOnda(this.value)">${ondas.map(o=>`<option ${o.nome===f.ondaNome?"selected":""}>${esc(o.nome)}</option>`).join("")}</select></div>
       <div class="compf"><label>Gramatura *</label><select onchange="devForm.gram=parseFloat(this.value)">${(onda?onda.gramaturas:[]).map(g=>`<option value="${g}" ${g==f.gram?"selected":""}>${g}g</option>`).join("")}</select></div>
-    </div></div>`;
+    </div>${isCustom(f)?`<div class="hint">Projeto customizável: as medidas da chapa você informa na etapa <b>Chapa</b>.</div>`:""}</div>`;
   } else if(devStep===2){
     content=`<div class="formcard"><div class="grid2">
       <div class="compf"><label>Fornecedor *</label><input list="forn-dl" value="${esc(f.fornecedor)}" placeholder="Buscar fornecedor..." oninput="devForm.fornecedor=this.value"><datalist id="forn-dl">${fornecedores.map(x=>`<option value="${esc(x.nome)}"></option>`).join("")}</datalist></div>
@@ -2109,16 +2143,21 @@ function renderWizard(){
     </div></div>`;
   } else if(devStep===4){
     if(!Array.isArray(f.vincos)||!f.vincos.length) devForm.vincos=vincosPadrao(f);
-    const d=chapaDims(f), peso=chapaPeso(f), custo=chapaCusto(f);
-    const soma=vincosSoma(f.vincos), ok=Math.abs(soma-d.larg)<0.5;
+    const cust=isCustom(f);
+    const d=chapaDimsAny(f), peso=chapaPesoAny(f), custo=chapaCustoAny(f);
+    const soma=vincosSoma(f.vincos), semVinco=soma===0, ok=semVinco||Math.abs(soma-d.larg)<0.5;
     const tipos=[["nenhum","Nenhum"],["meia","Meia Chapa"],["dupla","Chapa Dupla"],["contra","Contra Onda"]];
     const cur=f.chapaTipo||"nenhum";
-    content=`<div class="formcard">
-      <label class="flbl">Tipo de Chapa</label>
-      <div class="chiprow">${tipos.map(([v,l])=>`<button class="chip ${cur===v?"on":""}" onclick="setChapaTipo('${v}')">${l}</button>`).join("")}</div>
-      <div class="compgrid" style="margin-top:16px">
+    const chapaCampos = cust ? `
+        <div class="compf"><label>Comprimento da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${f.chapaComp||""}" oninput="devForm.chapaComp=parseFloat(String(this.value).replace(',','.'))||0;renderWizard()"></div>
+        <div class="compf"><label>Largura da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${f.chapaLarg||""}" oninput="devForm.chapaLarg=parseFloat(String(this.value).replace(',','.'))||0;renderWizard()"></div>` : `
         <div class="compf"><label>Comprimento da chapa (mm)</label><input class="locked" value="${d.comp}" readonly></div>
-        <div class="compf"><label>Largura da chapa (mm)</label><input class="locked" value="${d.larg}" readonly></div>
+        <div class="compf"><label>Largura da chapa (mm)</label><input class="locked" value="${d.larg}" readonly></div>`;
+    content=`<div class="formcard">
+      ${cust?"":`<label class="flbl">Tipo de Chapa</label>
+      <div class="chiprow">${tipos.map(([v,l])=>`<button class="chip ${cur===v?"on":""}" onclick="setChapaTipo('${v}')">${l}</button>`).join("")}</div>`}
+      <div class="compgrid" style="margin-top:16px">
+        ${chapaCampos}
         <div class="compf"><label>Peso unitário (kg)</label><input class="locked" value="${peso.toFixed(5)}" readonly></div>
         <div class="compf"><label>Custo unitário (R$)</label><input class="locked" value="${custo.toFixed(4)}" readonly></div>
       </div>
@@ -2126,8 +2165,9 @@ function renderWizard(){
       <div class="vincorow">
         ${f.vincos.map((v,i)=>`<input class="vinco ${ok?"":"bad"}" type="number" step="0.1" value="${v}" onchange="vincoChange(${i},this.value)">`).join("")}
         <button class="vincoadd" onclick="addVinco()" title="Adicionar vinco">+</button>
+        <button class="vincozero" onclick="zerarVincos()" title="Chapa sem vinco">Zerar</button>
       </div>
-      <div class="hint ${ok?"":"warn"}">${ok?`Soma dos vincos: <b>${soma.toFixed(1)} mm</b> = largura da chapa ✓`:`⚠️ Os vincos estão errados: a soma é <b>${soma.toFixed(1)} mm</b> e precisa bater com a largura da chapa (<b>${d.larg} mm</b>).`}</div>
+      <div class="hint ${ok?"":"warn"}">${semVinco?`Chapa <b>sem vinco</b> ✓`:(ok?`Soma dos vincos: <b>${soma.toFixed(1)} mm</b> = largura da chapa ✓`:`⚠️ Os vincos estão errados: a soma é <b>${soma.toFixed(1)} mm</b> e precisa bater com a largura da chapa (<b>${d.larg} mm</b>).`)}</div>
     </div>`;
   } else if(devStep===5){
     content=`<div class="formcard">
@@ -2201,12 +2241,18 @@ function renderItens(){
     const n=++nCx;
     return `<div class="prodcard" data-i="${i}">
       <div class="prodhead"><span>📦 Produto ${n}</span><button class="rm" onclick="removerItem(${i})" title="Remover">×</button></div>
-      <div class="field"><label>Tipo de produto</label><select data-f="produto" onchange="leItem(${i})">${optsProduto(it.produto)}</select></div>
+      <div class="field"><label>Tipo de produto</label><select data-f="produto" onchange="prodChange(${i})">${optsProduto(it.produto)}</select></div>
+      ${it.produto===PROD_CUSTOM ? `
+      <div class="field"><label>Medidas da chapa (mm)</label><div class="grid g2">
+        <input data-f="c" type="number" inputmode="numeric" placeholder="Comprimento da chapa" value="${it.c||""}" oninput="leItem(${i})">
+        <input data-f="l" type="number" inputmode="numeric" placeholder="Largura da chapa" value="${it.l||""}" oninput="leItem(${i})">
+        <input data-f="a" type="hidden" value="0">
+      </div></div>` : `
       <div class="field"><label>Medidas internas (mm)</label><div class="grid g3">
         <input data-f="c" type="number" inputmode="numeric" placeholder="Compr." value="${it.c||""}" oninput="leItem(${i})">
         <input data-f="l" type="number" inputmode="numeric" placeholder="Largura" value="${it.l||""}" oninput="leItem(${i})">
         <input data-f="a" type="number" inputmode="numeric" placeholder="Altura" value="${it.a||""}" oninput="leItem(${i})">
-      </div></div>
+      </div></div>`}
       <div class="grid g4">
         <div class="field"><label>Onda</label><select data-f="onda" onchange="ondaChange(${i})">${optsOnda(it.ondaNome)}</select></div>
         <div class="field"><label>Gramatura</label><select data-f="gram" onchange="leItem(${i})">${optsGram(onda,it.gram)}</select></div>
@@ -2231,10 +2277,13 @@ function pesoMinDoCard(i){
   const card=cardDe(i); if(!card) return {pesoKg:0,qtdMin:0};
   const g=f=>card.querySelector('[data-f="'+f+'"]');
   const onda=ondas[+g("onda").value||0], gram=parseFloat(g("gram").value)||0;
-  const {areaM2}=calcCaixa(g("c").value,g("l").value,g("a").value,onda);
+  let areaM2;
+  if(g("produto").value===PROD_CUSTOM){ areaM2=(+g("c").value||0)*(+g("l").value||0)/1e6; }
+  else { areaM2=calcCaixa(g("c").value,g("l").value,(g("a")?g("a").value:0),onda).areaM2; }
   const pesoKg=areaM2*gram/1000;
   return { pesoKg, qtdMin: pesoKg>0?Math.ceil(CONFIG.pesoMinKg/pesoKg):0 };
 }
+function prodChange(i){ const card=cardDe(i); if(card&&itensAtuais[i]){ itensAtuais[i].produto=card.querySelector('[data-f="produto"]').value; } renderItens(); }
 function leItem(i){
   const card=cardDe(i); if(!card) return;
   const g=f=>card.querySelector('[data-f="'+f+'"]');
@@ -2242,8 +2291,11 @@ function leItem(i){
   const produto=g("produto").value;
   const onda=ondas[+g("onda").value||0];
   const gram=parseFloat(g("gram").value)||0;
-  const c=g("c").value,l=g("l").value,a=g("a").value, vkg=parseFloat(g("vkg").value)||0;
-  const {compChapa,largChapa,areaM2}=calcCaixa(c,l,a,onda);
+  const c=g("c").value,l=g("l").value,a=(g("a")?g("a").value:0), vkg=parseFloat(g("vkg").value)||0;
+  const cust=produto===PROD_CUSTOM;
+  let compChapa,largChapa,areaM2;
+  if(cust){ compChapa=+c||0; largChapa=+l||0; areaM2=compChapa*largChapa/1e6; }
+  else { ({compChapa,largChapa,areaM2}=calcCaixa(c,l,a,onda)); }
   const pesoKg=areaM2*gram/1000;
   const qtdMin=pesoKg>0?Math.ceil(CONFIG.pesoMinKg/pesoKg):0;
   let qtd=parseInt(g("qtd").value)||0;
@@ -2251,13 +2303,14 @@ function leItem(i){
   if(qtdMin){ g("qtd").min=qtdMin; }
   const preco=pesoKg*vkg;
   Object.assign(it,{produto,ondaNome:onda?onda.nome:"",gram,c,l,a,vkg,qtd,preco,total:preco*qtd,
-    desc:`${produto} ${c||0}×${l||0}×${a||0}mm`,
+    chapaComp:Math.round(compChapa),chapaLarg:Math.round(largChapa),
+    desc: cust?`${produto} (chapa ${c||0}×${l||0}mm)`:`${produto} ${c||0}×${l||0}×${a||0}mm`,
     detalhe:`${onda?onda.nome:""} · ${gram} g/m² · ${qtd.toLocaleString("pt-BR")} un · ${brl(vkg)}/kg`});
   card.querySelector(".calc").innerHTML=`
     <div class="ln"><span>Chapa</span><b class="num">${Math.round(compChapa)} × ${Math.round(largChapa)} mm</b></div>
-    <div class="ln"><span>Peso por caixa</span><b class="num">${(pesoKg*1000).toFixed(0)} g (${pesoKg.toFixed(3)} kg)</b></div>
+    <div class="ln"><span>Peso por ${cust?"chapa":"caixa"}</span><b class="num">${(pesoKg*1000).toFixed(0)} g (${pesoKg.toFixed(3)} kg)</b></div>
     <div class="ln"><span>Qtd mínima (${CONFIG.pesoMinKg} kg)</span><b class="num">${qtdMin?qtdMin.toLocaleString("pt-BR")+" un":"—"}</b></div>
-    <div class="ln"><span>Preço por caixa</span><b class="num">${brl(preco)}</b></div>
+    <div class="ln"><span>Preço por ${cust?"chapa":"caixa"}</span><b class="num">${brl(preco)}</b></div>
     <div class="ln big"><span>Subtotal (${qtd.toLocaleString("pt-BR")} un)</span><b class="num">${brl(preco*qtd)}</b></div>`;
   atualizarTotal();
 }
