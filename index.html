@@ -152,6 +152,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .devinfo span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 .devside{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:9px}
 .devbtn{padding:9px 12px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:12.5px;font-weight:600;white-space:nowrap}
+.devside-btns{display:flex;gap:8px;align-items:center}
 .devbtn:active{background:var(--bg)}
 @media(max-width:560px){.devcard{flex-direction:column}.devside{flex-direction:row;align-items:center;width:100%;justify-content:space-between}}
 
@@ -559,7 +560,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v41 · dados salvos neste aparelho</div>
+    <div class="foot">v42 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -1485,6 +1486,7 @@ function devItems(){
     o.itens.forEach((it,idx)=>{
       if(it.tipo==="avulso") return;
       const key=o.id+":"+idx; const e=devEntry(key);
+      if(e && e.status==="excluido") return;
       arr.push({ key, origem:"orc", orcId:o.id, cliente:o.cliente, vendedor:o.vendedor, data:o.data, it, entry:e, status:(e&&e.status)||"aguardando" });
     });
   });
@@ -1545,15 +1547,18 @@ function renderDesenv(){
       </div>
       <div class="devside">
         <span class="st pend">Aguardando</span>
-        <button class="devbtn" onclick="abrirDesenvWizard('${x.key}')">🛠️ Desenvolver</button>
+        <div class="devside-btns">
+          <button class="devbtn" onclick="abrirDesenvWizard('${x.key}')">🛠️ Desenvolver</button>
+          <button class="ic-btn rm" onclick="excluirDev('${x.key}')" title="Excluir">×</button>
+        </div>
       </div>
     </div>`;
   }).join("");
 }
 function excluirDev(key){
-  if(!confirm("Excluir este desenvolvimento?")) return;
+  if(!confirm("Excluir este item da lista de desenvolvimento?")) return;
   if(String(key).startsWith("av:")){ devAvulsos=devAvulsos.filter(a=>a.key!==key); salvar(LS.devav,devAvulsos); }
-  else { delete desenvStatus[key]; salvar(LS.dev,desenvStatus); }
+  else { desenvStatus[key]={status:"excluido"}; salvar(LS.dev,desenvStatus); }
   renderDesenv();
 }
 function fichaTecnica(key){
