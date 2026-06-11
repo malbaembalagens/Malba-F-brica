@@ -63,6 +63,23 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .pcard .tx{flex:1}.pcard .tx b{font-weight:700;font-size:17px;display:block}.pcard .tx span{color:var(--muted);font-size:13px}
 .pcard .arr{color:var(--muted-2);font-size:22px}
 .foot{text-align:center;color:var(--muted-2);font-size:12px;padding:30px 0 18px}
+.synclink{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:700;font-size:14px}
+.synclink:active{filter:brightness(.97)}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#9aa4b2;display:inline-block;flex:none}
+.syncwrap{padding:16px;max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.syncstatus{padding:13px 15px;border-radius:12px;font-weight:800;font-size:15px;text-align:center;background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.syncstatus.online{background:#e7f7ee;color:#138a4a;border-color:#bfe9cf}
+.syncstatus.erro{background:#fdeaea;color:#c0392b;border-color:#f3c2c2}
+.syncstatus.conectando{background:#fff5e6;color:#b9770e;border-color:#f3ddb3}
+.synccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px}
+.synch3{font-weight:800;font-size:15px;color:var(--text)}
+.syncp{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+.syncsql{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.45;background:var(--dark);color:#dbe7ff;border:none;border-radius:10px;padding:12px;resize:vertical}
+.synclbl{font-size:12px;font-weight:700;color:var(--muted);margin-top:4px}
+.syncinp{width:100%;padding:13px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);font-size:14px;font-family:inherit}
+.synctip{font-size:12.5px;color:var(--muted);line-height:1.55;background:#fff8e6;border:1px solid #f0e0b0;border-radius:12px;padding:13px}
+.btn.full{flex:none;width:100%;display:block}
+.btn.ghost.danger{color:#c0392b;border-color:#f0c4c4}
 
 /* Layout: trilha de ícones + gaveta */
 .vlayout{display:flex;gap:16px;align-items:flex-start;position:relative}
@@ -357,6 +374,8 @@ tbody tr:hover{background:var(--surface-2)}
 .okbtn{width:34px;height:34px;border-radius:9px;border:none;background:var(--green);color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:inline-grid;place-items:center;box-shadow:var(--shadow)}
 .okbtn:hover{filter:brightness(.95)}
 .procacts{display:flex;gap:8px;align-items:center}
+.delbtn{width:34px;height:34px;border-radius:9px;border:1px solid #f3c2c2;background:#fdeaea;color:#c0392b;font-size:15px;font-weight:800;cursor:pointer;display:inline-grid;place-items:center}
+.delbtn:active{filter:brightness(.95)}
 .tercbtn{padding:0 14px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
 .tercbtn:hover{border-color:var(--accent);color:var(--accent)}
 .truckbtn{width:38px;height:34px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;display:inline-grid;place-items:center;box-shadow:var(--shadow)}
@@ -565,7 +584,43 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v50 · dados salvos neste aparelho</div>
+    <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
+    <div class="foot">v52 · dados salvos neste aparelho</div>
+  </section>
+
+  <!-- ============ SINCRONIZAÇÃO ============ -->
+  <section id="tela-sync" class="screen">
+    <div class="topbar">
+      <button class="back" onclick="irPerfis()">‹</button>
+      <div class="tt"><small>MALBA Fábrica</small><h2>Sincronização</h2></div>
+    </div>
+    <div class="syncwrap">
+      <div id="sync-status-card" class="syncstatus">Carregando…</div>
+
+      <div class="synccard">
+        <div class="synch3">Passo 1 · Criar a tabela no Supabase</div>
+        <p class="syncp">No painel do seu projeto, abra <b>SQL Editor</b>, cole o código abaixo e clique em <b>Run</b>. Só precisa fazer isso <b>uma vez</b>.</p>
+        <textarea id="sync-sql" class="syncsql" readonly rows="7"></textarea>
+        <button class="btn ghost full" onclick="copySQL()">📋 Copiar código SQL</button>
+      </div>
+
+      <div class="synccard">
+        <div class="synch3">Passo 2 · Conectar este aparelho</div>
+        <p class="syncp">No Supabase: <b>Project Settings → API</b>. Copie o <b>Project URL</b> e a chave <b>anon public</b> e cole aqui.</p>
+        <label class="synclbl">Link do projeto (Project URL)</label>
+        <input id="sync-url" class="syncinp" placeholder="https://xxxx.supabase.co" autocomplete="off">
+        <label class="synclbl">Chave anon public</label>
+        <input id="sync-key" class="syncinp" placeholder="eyJhbGciOi..." autocomplete="off">
+        <button class="btn primary full" onclick="syncConectar()">Conectar e sincronizar</button>
+      </div>
+
+      <div class="synccard" id="sync-actions">
+        <button class="btn ghost full" onclick="syncAgora()">🔄 Sincronizar agora</button>
+        <button class="btn ghost full danger" onclick="syncDesconectar()">Desconectar este aparelho</button>
+      </div>
+
+      <div class="synctip">⚠️ <b>Importante:</b> configure <b>primeiro</b> a máquina que já tem todos os dados cadastrados. Assim seus dados sobem pra nuvem e viram a base. Depois conecte os outros aparelhos — eles vão baixar tudo automaticamente.</div>
+    </div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -961,7 +1016,7 @@ const LS = { orc:"malba_os_orcamentos_v1", seq:"malba_os_seq_v1", cli:"malba_os_
 
 // util
 function carregar(k,def){ try{ const v=JSON.parse(localStorage.getItem(k)); return (v===null||v===undefined)?def:v }catch(e){ return def } }
-function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
+function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); try{ if(typeof syncPush==="function") syncPush(k); }catch(e){} }
 function brl(n){ return "R$ " + (Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) }
 function hoje(){ return new Date() }
 function fmtData(iso){ return new Date(iso).toLocaleDateString("pt-BR") }
@@ -997,6 +1052,134 @@ let records = carregar(LS.records, DEFAULT_RECORDS);
 let metaProd = carregar(LS.metaprod, {caixas:35000, ton:2.5});
 let procTab={imp:"aguardando", acab:"aguardando"}, impPage=1, acabPage=1;
 let histProcTab="todos";
+
+/* ===================== SINCRONIZAÇÃO SUPABASE (camada aditiva, à prova de falha) ===================== */
+const SYNC_KEYS = Object.values(LS);
+let SUPA_URL = localStorage.getItem("malba_sync_url")||"";
+let SUPA_KEY = localStorage.getItem("malba_sync_key")||"";
+let syncOn = !!(SUPA_URL && SUPA_KEY);
+let syncStatus = syncOn?"conectando":"off";   // off | conectando | online | erro
+let pendingPush = {}, syncVer = {}, syncPollTimer = null;
+function syncBase(){ return SUPA_URL.replace(/\/+$/,""); }
+function syncHeaders(){ return { "apikey":SUPA_KEY, "Authorization":"Bearer "+SUPA_KEY, "Content-Type":"application/json" }; }
+async function cloudPullAll(){
+  const r = await fetch(syncBase()+"/rest/v1/malba_kv?select=key,value,updated_at", { headers:syncHeaders() });
+  if(!r.ok) throw new Error("pull "+r.status);
+  const rows = await r.json(); const map={};
+  rows.forEach(row=>{ map[row.key]={value:row.value, updated_at:row.updated_at}; });
+  return map;
+}
+async function cloudUpsert(key,value){
+  const r = await fetch(syncBase()+"/rest/v1/malba_kv?on_conflict=key", {
+    method:"POST", headers:Object.assign({Prefer:"resolution=merge-duplicates"},syncHeaders()),
+    body:JSON.stringify([{ key, value, updated_at:new Date().toISOString() }]) });
+  if(!r.ok) throw new Error("upsert "+r.status);
+}
+function reloadState(){
+  orcamentos = carregar(LS.orc, []);
+  clientes   = carregar(LS.cli, []);
+  vendedores = carregar(LS.vend, DEF_VEND).map(v=> typeof v==="string" ? {nome:v,fone:""} : v);
+  produtos   = carregar(LS.prod, DEF_PROD);
+  ondas      = carregar(LS.ondas, DEF_ONDAS).map(o=>{ if(!o.comp) o.comp=compPadrao(o.nome); return o; });
+  fornecedores = carregar(LS.forn, []).map(f=> typeof f==="string" ? {nome:f,fone:""} : f);
+  desenvStatus = carregar(LS.dev, {});
+  historico = carregar(LS.hist, []);
+  devAvulsos = carregar(LS.devav, []);
+  metas = carregar(LS.meta, {impressao:0, acabamento:0});
+  ordens = carregar(LS.oc, []);
+  producao = carregar(LS.prodflow, []);
+  records = carregar(LS.records, DEFAULT_RECORDS);
+  metaProd = carregar(LS.metaprod, {caixas:35000, ton:2.5});
+}
+function syncRefreshUI(){ try{ preencherSelects(); render(); renderDashProd(); }catch(e){} }
+function syncSetStatus(s){ syncStatus=s; try{ renderSyncScreen(); }catch(e){} }
+async function syncInit(){
+  if(!syncOn) return;
+  syncSetStatus("conectando");
+  try{
+    const cloud = await cloudPullAll();
+    const keys = Object.keys(cloud).filter(k=>SYNC_KEYS.includes(k));
+    if(keys.length===0){
+      for(const k of SYNC_KEYS){ const raw=localStorage.getItem(k); if(raw!==null){ await cloudUpsert(k, JSON.parse(raw)); syncVer[k]=new Date().toISOString(); } }
+    } else {
+      if(!localStorage.getItem("malba_sync_backup")){ const bk={}; SYNC_KEYS.forEach(k=>bk[k]=localStorage.getItem(k)); localStorage.setItem("malba_sync_backup", JSON.stringify(bk)); }
+      keys.forEach(k=>{ localStorage.setItem(k, JSON.stringify(cloud[k].value)); syncVer[k]=cloud[k].updated_at; });
+      reloadState(); syncRefreshUI();
+    }
+    syncSetStatus("online"); syncStartPolling();
+  }catch(e){ console.warn("sync init",e); syncSetStatus("erro"); }
+}
+async function syncPull(){
+  if(!syncOn) return;
+  try{
+    const cloud = await cloudPullAll(); let changed=false;
+    Object.keys(cloud).forEach(k=>{
+      if(!SYNC_KEYS.includes(k)||pendingPush[k]) return;
+      if(cloud[k].updated_at && cloud[k].updated_at!==syncVer[k]){
+        const nv=JSON.stringify(cloud[k].value);
+        if(localStorage.getItem(k)!==nv){ localStorage.setItem(k,nv); changed=true; }
+        syncVer[k]=cloud[k].updated_at;
+      }
+    });
+    if(changed){ reloadState(); syncRefreshUI(); }
+    if(syncStatus!=="online") syncSetStatus("online");
+  }catch(e){ syncSetStatus("erro"); }
+}
+async function flushPending(){
+  if(!syncOn) return;
+  for(const k of Object.keys(pendingPush)){
+    try{ const raw=localStorage.getItem(k); if(raw!==null){ await cloudUpsert(k, JSON.parse(raw)); syncVer[k]=new Date().toISOString(); } delete pendingPush[k]; }catch(e){}
+  }
+}
+function syncStartPolling(){ if(syncPollTimer) clearInterval(syncPollTimer); syncPollTimer=setInterval(()=>{ flushPending().then(syncPull); }, 20000); }
+function syncPush(key){
+  if(!syncOn || !SYNC_KEYS.includes(key)) return;
+  pendingPush[key]=true;
+  (async()=>{ try{ const raw=localStorage.getItem(key); if(raw!==null){ await cloudUpsert(key, JSON.parse(raw)); syncVer[key]=new Date().toISOString(); delete pendingPush[key]; if(syncStatus!=="online") syncSetStatus("online"); } }catch(e){ syncSetStatus("erro"); } })();
+}
+function syncConectar(){
+  const u=(document.getElementById("sync-url")||{}).value||"";
+  const k=(document.getElementById("sync-key")||{}).value||"";
+  if(!u.trim()||!k.trim()){ alert("Cole o Link do projeto e a Chave anon."); return; }
+  SUPA_URL=u.trim(); SUPA_KEY=k.trim();
+  localStorage.setItem("malba_sync_url",SUPA_URL); localStorage.setItem("malba_sync_key",SUPA_KEY);
+  syncOn=true; syncSetStatus("conectando"); syncInit();
+}
+function syncDesconectar(){
+  if(!confirm("Desconectar a sincronização deste aparelho? Os dados continuam salvos localmente.")) return;
+  syncOn=false; if(syncPollTimer) clearInterval(syncPollTimer);
+  localStorage.removeItem("malba_sync_url"); localStorage.removeItem("malba_sync_key");
+  SUPA_URL=""; SUPA_KEY=""; syncSetStatus("off");
+}
+function syncAgora(){ flushPending().then(syncPull); }
+const SYNC_SQL = `create table if not exists malba_kv (
+  key text primary key,
+  value jsonb,
+  updated_at timestamptz default now()
+);
+alter table malba_kv enable row level security;
+drop policy if exists malba_kv_all on malba_kv;
+create policy malba_kv_all on malba_kv for all to anon, authenticated using (true) with check (true);`;
+function abrirSync(){ show("tela-sync"); renderSyncScreen(); }
+function copySQL(){
+  const ta=document.getElementById("sync-sql");
+  try{ navigator.clipboard.writeText(SYNC_SQL); }catch(e){ if(ta){ ta.focus(); ta.select(); try{document.execCommand("copy");}catch(_){} } }
+  const b=event&&event.target; if(b){ const t=b.textContent; b.textContent="✓ Copiado!"; setTimeout(()=>b.textContent=t,1500); }
+}
+function renderSyncScreen(){
+  const dot=document.getElementById("sync-dot");
+  const map={ off:["#9aa4b2","Não configurada"], conectando:["#f5a623","Conectando…"], online:["#22c55e","Sincronizado ✓"], erro:["#ef4444","Erro de conexão"] };
+  const [cor,txt]=map[syncStatus]||map.off;
+  if(dot){ dot.style.background=cor; }
+  const card=document.getElementById("sync-status-card");
+  if(card){ card.textContent=txt; card.className="syncstatus "+syncStatus; }
+  const sql=document.getElementById("sync-sql"); if(sql && !sql.value) sql.value=SYNC_SQL;
+  const u=document.getElementById("sync-url"); if(u && !u.value) u.value=SUPA_URL;
+  const k=document.getElementById("sync-key"); if(k && !k.value) k.value=SUPA_KEY;
+  const act=document.getElementById("sync-actions"); if(act) act.style.display=syncOn?"":"none";
+}
+/* ===================== fim sincronização ===================== */
+
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mesAtual(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function hojeStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -1864,6 +2047,13 @@ function renderNovaOC(){
 // ---------- Produção: Impressão / Acabamento ----------
 function setProcTab(stage,t,el){ procTab[stage]=t; if(stage==="imp")impPage=1; else acabPage=1; const wrap=stage==="imp"?"#gview-prod-impressao":"#gview-prod-acabamento"; document.querySelectorAll(wrap+" .tab").forEach(c=>c.classList.remove("on")); el.classList.add("on"); renderProc(stage); }
 function procDisp(stage,p){ return stage==="imp" ? (p.qtd - p.imp.feito) : (p.imp.feito - p.acab.feito); }
+function ehGestor(){ const g=document.getElementById("tela-gestor"); return !!g && !g.classList.contains("modo-prod"); }
+function excluirProc(stage,id){
+  if(!confirm("Excluir este item da impressão? Esta ação não pode ser desfeita.")) return;
+  producao = producao.filter(p=>p.id!==id);
+  salvar(LS.prodflow, producao);
+  renderProc(stage);
+}
 function procLists(stage){
   // itens que entram nesse estágio
   let base = producao.filter(p=> stage==="imp" ? !p.terceirizado : p.imp.feito>0 );
@@ -1892,13 +2082,14 @@ function renderProc(stage){
   const head=`<thead><tr><th>SKU</th><th>Ordem de compra</th><th>Caixa</th><th class="num">QTDE</th><th class="num">Peso</th><th>Ações</th></tr></thead>`;
   if(!lst.length){ box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted-2);padding:34px">Nenhum item encontrado.</td></tr></tbody></table></div>`; return; }
   const rows=slice.map(p=>{ const concl=(tab==="concluido"); const q= concl ? (stage==="imp"?p.imp.feito:p.acab.feito) : procDisp(stage,p);
+    const delBtn=(stage==="imp" && ehGestor()) ? `<button class="delbtn" onclick="excluirProc('imp','${p.id}')" title="Excluir item">✕</button>` : "";
     return `<tr>
       <td><b>${esc(p.sku||"—")}</b></td>
       <td>${esc(p.ocId)}</td>
       <td>${p.c}×${p.l}×${p.a} mm</td>
       <td class="num">${(+q||0).toLocaleString("pt-BR")}</td>
       <td class="num">${(p.pesoUnit*q).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:3})} kg</td>
-      <td>${ concl ? `<span class="stb stb-rec">✓ Concluído</span>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ stage==="imp" ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }</div>` }</td>
+      <td>${ concl ? `<div class="procacts"><span class="stb stb-rec">✓ Concluído</span>${delBtn}</div>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ stage==="imp" ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }${delBtn}</div>` }</td>
     </tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody>${rows}</tbody></table></div>
     <div class="pager"><button ${page<=1?"disabled":""} onclick="${stage==="imp"?"impPage--":"acabPage--"};renderProc('${stage}')">← Anterior</button><span class="pgnum">${page}</span><button ${page>=pages?"disabled":""} onclick="${stage==="imp"?"impPage++":"acabPage++"};renderProc('${stage}')">Próximo →</button></div>`;
@@ -2702,8 +2893,58 @@ function seedProdutosFichas4(){
   localStorage.setItem("malba_os_fichas_v4","1");
 }
 seedProdutosFichas4();
+function seedOrdensCompra(){
+  if(localStorage.getItem("malba_os_ocs_v1")) return;
+  // OCs: itens = [sku, larg, comp, v1, v2, v3, onda, gram, qtd, valorTotal]
+  const OC=[
+    { id:"01062026001", data:"2026-06-01", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:5494.70544, sub:36420, total:37603.65, itens:[
+      ["P05-RCP",336,815,95,146,95,"B",346,10000,6300],["P08-RCP",365,857,70,225,70,"D",344,12000,8520],
+      ["P02-RCP",250,601,61,128,61,"D",344,30000,10200],["P03-RCP",250,661,61,128,61,"D",344,30000,11400]]},
+    { id:"02062026002", data:"2026-06-02", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:1468.64544, sub:9600, total:9912, itens:[
+      ["P07",296,717,60,176,60,"B",346,20000,9600]]},
+    { id:"05062026001", data:"2026-06-05", forn:"FAPOLPA", peso:1457.87418, sub:10785, total:11135.51, itens:[
+      ["WC04",386,882,95,196,95,"T",280,3500,2485],["M01",406,1242,125,156,125,"T",280,3000,3120],
+      ["WC05",364,1035,90,184,90,"T",280,3500,2730],["MGO02",522,1351,151,220,151,"TT",470,1000,2450]]},
+    { id:"05062026002", data:"2026-06-05", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:1489.6920664, sub:10038, total:10364.24, itens:[
+      ["MALUDOCESM",256,842,80,96,80,"B",346,4200,2268],["MALUDOCES03",346,875,90,166,90,"B",346,3000,2070],
+      ["MALUDOCES04",346,1135,115,116,115,"B",346,4000,3600],["Pnova",306,602,70,166,70,"B",346,5000,2100]]},
+    { id:"08052026002", data:"2026-05-08", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:7250.8534216, sub:47855.63, total:49410.94, itens:[
+      ["M02",506,1202,100,306,100,"B",346,5000,6944.56],["M04",606,1432,150,306,150,"B",346,4000,7926.76],
+      ["P06-RCP",286,1000,90,106,90,"B",344,10000,6493.34],["M05",0,0,0,0,0,"B",346,1500,0],
+      ["M06",686,577,145,396,145,"B",346,1500,1931.56],["M07",636,1022,195,246,195,"B",346,800,1187.46],
+      ["P04-RCP",252,817,75,102,75,"D",344,50000,23371.95]]},
+    { id:"20052026001", data:"2026-05-20", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:5413.223, sub:35750, total:36911.88, itens:[
+      ["P05-RCP",336,815,95,146,95,"B",346,10000,6300],["P09-RCP",406,1015,100,206,100,"B",346,20000,18800],
+      ["P08-RCP",365,857,70,225,70,"D",344,15000,10650]]},
+    { id:"22052026001", data:"2026-05-22", forn:"FAPOLPA", peso:613.356772, sub:4541, total:4688.58, itens:[
+      ["LONAN02",363,571,45,273,45,"T",280,5300,2279],["LONAN01",503,835,100,303,100,"T",280,2600,2262]]},
+    { id:"25052026001", data:"2026-05-25", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:630.0965864, sub:4157.60, total:4292.72, itens:[
+      ["Adisni05",535,847,135,265,135,"B",346,1920,1977.60],["Adisni01",575,827,155,265,155,"B",346,2000,2180]]},
+    { id:"25052026002", data:"2026-05-25", forn:"SBM Distrib de Embalagens S.A", peso:3026.9460936, sub:22682, total:23419.17, itens:[
+      ["Adisni03",726,962,230,266,230,"C",386,5900,11918],["Adisni04",736,1122,235,266,235,"C",446,3900,10764]]},
+    { id:"28052026001", data:"2026-05-28", forn:"SBM Distrib de Embalagens S.A", peso:1210.0885736, sub:9064, total:9358.58, itens:[
+      ["TUDOBARATO22",377,999,120,137,120,"C",386,2200,2398],["CLARO01",602,1069,82.5,437,82.5,"C",386,2300,4278],
+      ["TUDOBARATO01",497,1199,145,207,145,"C",446,1200,2388]]}
+  ];
+  OC.forEach(o=>{
+    const itens=o.itens.map(r=>{
+      const [sku,larg,comp,v1,v2,v3,onda,gram,qtd,vt]=r;
+      const pesoUnit=(comp*larg/1e6)*gram/1000;
+      const custoUnit= qtd? vt/qtd : 0;
+      return { sku, produto:"", c:0,l:0,a:0, chapaComp:comp, chapaLarg:larg, gram, ondaNome:onda,
+        vincos:[v1,v2,v3], qtd, pesoUnit, peso:pesoUnit*qtd, custoUnit, valor:vt };
+    });
+    ordens.push({ id:o.id, dataPrevista:o.data, fornecedor:o.forn, itens, peso:o.peso, valor:o.sub, ipi:o.sub*0.0325, valorTotal:o.total, recebida:true });
+  });
+  salvar(LS.oc,ordens);
+  localStorage.setItem("malba_os_ocs_v1","1");
+}
+seedOrdensCompra();
 preencherSelects();
 render();
+try{ renderSyncScreen(); }catch(e){}
+try{ syncInit(); }catch(e){}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && syncOn){ flushPending().then(syncPull); } });
 </script>
 </body>
 </html>
