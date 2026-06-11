@@ -599,7 +599,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v56 · dados salvos neste aparelho</div>
+    <div class="foot">v57 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -2949,10 +2949,7 @@ function seedProdutosFichas4(){
   localStorage.setItem("malba_os_fichas_v4","1");
 }
 seedProdutosFichas4();
-function seedOrdensCompra(){
-  if(localStorage.getItem("malba_os_ocs_v1")) return;
-  // OCs: itens = [sku, larg, comp, v1, v2, v3, onda, gram, qtd, valorTotal]
-  const OC=[
+const OC_DATA=[
     { id:"01062026001", data:"2026-06-01", forn:"RCP PAPEIS UNIPESSOAL LTDA", peso:5494.70544, sub:36420, total:37603.65, itens:[
       ["P05-RCP",336,815,95,146,95,"B",346,10000,6300],["P08-RCP",365,857,70,225,70,"D",344,12000,8520],
       ["P02-RCP",250,601,61,128,61,"D",344,30000,10200],["P03-RCP",250,661,61,128,61,"D",344,30000,11400]]},
@@ -2981,17 +2978,14 @@ function seedOrdensCompra(){
     { id:"28052026001", data:"2026-05-28", forn:"SBM Distrib de Embalagens S.A", peso:1210.0885736, sub:9064, total:9358.58, itens:[
       ["TUDOBARATO22",377,999,120,137,120,"C",386,2200,2398],["CLARO01",602,1069,82.5,437,82.5,"C",386,2300,4278],
       ["TUDOBARATO01",497,1199,145,207,145,"C",446,1200,2388]]}
-  ];
-  OC.forEach(o=>{
-    const itens=o.itens.map(r=>{
-      const [sku,larg,comp,v1,v2,v3,onda,gram,qtd,vt]=r;
-      const pesoUnit=(comp*larg/1e6)*gram/1000;
-      const custoUnit= qtd? vt/qtd : 0;
-      return { sku, produto:"", c:0,l:0,a:0, chapaComp:comp, chapaLarg:larg, gram, ondaNome:onda,
-        vincos:[v1,v2,v3], qtd, pesoUnit, peso:pesoUnit*qtd, custoUnit, valor:vt };
-    });
-    ordens.push({ id:o.id, dataPrevista:o.data, fornecedor:o.forn, itens, peso:o.peso, valor:o.sub, ipi:o.sub*0.0325, valorTotal:o.total, recebida:false });
-  });
+];
+function ocBuildItens(o){ return o.itens.map(r=>{ const [sku,larg,comp,v1,v2,v3,onda,gram,qtd,vt]=r;
+  const pesoUnit=(comp*larg/1e6)*gram/1000; const custoUnit= qtd? vt/qtd : 0;
+  return { sku, produto:"", c:0,l:0,a:0, chapaComp:comp, chapaLarg:larg, gram, ondaNome:onda, vincos:[v1,v2,v3], qtd, pesoUnit, peso:pesoUnit*qtd, custoUnit, valor:vt }; }); }
+function ocRecord(o){ return { id:o.id, dataPrevista:o.data, fornecedor:o.forn, itens:ocBuildItens(o), peso:o.peso, valor:o.sub, ipi:o.sub*0.0325, valorTotal:o.total, recebida:false }; }
+function seedOrdensCompra(){
+  if(localStorage.getItem("malba_os_ocs_v1")) return;
+  OC_DATA.forEach(o=> ordens.push(ocRecord(o)) );
   salvar(LS.oc,ordens);
   localStorage.setItem("malba_os_ocs_v1","1");
 }
@@ -3008,10 +3002,18 @@ function fixOcsNaoRecebidas(){
   localStorage.setItem("malba_os_ocs_naorec_v1","1");
 }
 fixOcsNaoRecebidas();
+function repararOrdens(){
+  if(localStorage.getItem("malba_os_ocs_rep_v1")) return;
+  const ex=new Set(ordens.map(o=>String(o.id)));
+  let added=false;
+  OC_DATA.forEach(o=>{ if(!ex.has(String(o.id))){ ordens.push(ocRecord(o)); added=true; } });
+  if(added){ salvar(LS.oc,ordens); try{ renderOC(); }catch(e){} try{ renderPCP(); }catch(e){} }
+  localStorage.setItem("malba_os_ocs_rep_v1","1");
+}
 preencherSelects();
 render();
 try{ renderSyncScreen(); }catch(e){}
-try{ syncInit(); }catch(e){}
+(async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} })();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && syncOn){ flushPending().then(syncPull); } });
 </script>
 </body>
