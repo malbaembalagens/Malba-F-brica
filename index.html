@@ -585,7 +585,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v52 · dados salvos neste aparelho</div>
+    <div class="foot">v53 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -1055,9 +1055,12 @@ let histProcTab="todos";
 
 /* ===================== SINCRONIZAÇÃO SUPABASE (camada aditiva, à prova de falha) ===================== */
 const SYNC_KEYS = Object.values(LS);
-let SUPA_URL = localStorage.getItem("malba_sync_url")||"";
-let SUPA_KEY = localStorage.getItem("malba_sync_key")||"";
-let syncOn = !!(SUPA_URL && SUPA_KEY);
+const DEFAULT_SUPA_URL = "https://hatiyuhtbiyyfucexaar.supabase.co";
+const DEFAULT_SUPA_KEY = "sb_publishable_9FpvlA5dbTmkQ2bhfYue9g_dMHsqIs5";
+let SUPA_URL = localStorage.getItem("malba_sync_url")||DEFAULT_SUPA_URL;
+let SUPA_KEY = localStorage.getItem("malba_sync_key")||DEFAULT_SUPA_KEY;
+let syncOff = localStorage.getItem("malba_sync_off")==="1";
+let syncOn = !syncOff && !!(SUPA_URL && SUPA_KEY);
 let syncStatus = syncOn?"conectando":"off";   // off | conectando | online | erro
 let pendingPush = {}, syncVer = {}, syncPollTimer = null;
 function syncBase(){ return SUPA_URL.replace(/\/+$/,""); }
@@ -1143,13 +1146,15 @@ function syncConectar(){
   if(!u.trim()||!k.trim()){ alert("Cole o Link do projeto e a Chave anon."); return; }
   SUPA_URL=u.trim(); SUPA_KEY=k.trim();
   localStorage.setItem("malba_sync_url",SUPA_URL); localStorage.setItem("malba_sync_key",SUPA_KEY);
+  localStorage.removeItem("malba_sync_off"); syncOff=false;
   syncOn=true; syncSetStatus("conectando"); syncInit();
 }
 function syncDesconectar(){
   if(!confirm("Desconectar a sincronização deste aparelho? Os dados continuam salvos localmente.")) return;
   syncOn=false; if(syncPollTimer) clearInterval(syncPollTimer);
   localStorage.removeItem("malba_sync_url"); localStorage.removeItem("malba_sync_key");
-  SUPA_URL=""; SUPA_KEY=""; syncSetStatus("off");
+  localStorage.setItem("malba_sync_off","1"); syncOff=true;
+  SUPA_URL=DEFAULT_SUPA_URL; SUPA_KEY=DEFAULT_SUPA_KEY; syncSetStatus("off"); renderSyncScreen();
 }
 function syncAgora(){ flushPending().then(syncPull); }
 const SYNC_SQL = `create table if not exists malba_kv (
