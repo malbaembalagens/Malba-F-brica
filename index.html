@@ -374,6 +374,20 @@ tbody tr:hover{background:var(--surface-2)}
 .okbtn{width:34px;height:34px;border-radius:9px;border:none;background:var(--green);color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:inline-grid;place-items:center;box-shadow:var(--shadow)}
 .okbtn:hover{filter:brightness(.95)}
 .procacts{display:flex;gap:8px;align-items:center}
+#pcp-box{display:flex;flex-direction:column;gap:12px;max-width:760px}
+.pcp-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.pcp-head{display:flex;align-items:center;gap:10px;width:100%;padding:14px 15px;text-align:left;border-left:5px solid var(--c);background:var(--surface);cursor:pointer}
+.pcp-head:active{filter:brightness(.98)}
+.pcp-emoji{font-size:17px;line-height:1}
+.pcp-tt{font-weight:800;font-size:14.5px;color:var(--text)}
+.pcp-count{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.pcp-chev{font-size:12px;color:var(--muted);width:14px;text-align:center}
+.pcp-body{border-top:1px solid var(--border)}
+.pcp-item{display:flex;align-items:center;gap:10px;padding:11px 15px;border-bottom:1px solid var(--surface-2)}
+.pcp-item:last-child{border-bottom:none}
+.pcp-isku{font-weight:800;font-size:14px;color:var(--text);min-width:92px}
+.pcp-imeta{font-size:12px;color:var(--muted);flex:1;line-height:1.4}
+.pcp-empty{padding:16px 15px;color:var(--muted-2);font-size:13px;text-align:center}
 .delbtn{width:34px;height:34px;border-radius:9px;border:1px solid #f3c2c2;background:#fdeaea;color:#c0392b;font-size:15px;font-weight:800;cursor:pointer;display:inline-grid;place-items:center}
 .delbtn:active{filter:brightness(.95)}
 .tercbtn{padding:0 14px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
@@ -585,7 +599,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v54 · dados salvos neste aparelho</div>
+    <div class="foot">v56 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -762,7 +776,7 @@ tbody tr:hover{background:var(--surface-2)}
 
       <main class="content">
         <div class="vview" id="gview-dash-prod" style="display:none"><h2 class="viewtitle">Dashboard · Produção</h2><div id="dashprod-c"></div></div>
-        <div class="vview" id="gview-dash-pcp" style="display:none"><h2 class="viewtitle">Dashboard · PCP</h2><div class="constr" style="padding:50px 10px"><span class="em">🧩</span><h2>Em breve</h2><p>Você vai me explicar este módulo.</p></div></div>
+        <div class="vview" id="gview-dash-pcp" style="display:none"><h2 class="viewtitle">PCP · Planejamento e Controle</h2><div id="pcp-box"></div></div>
         <div class="vview" id="gview-dash-agenda" style="display:none"><h2 class="viewtitle">Agenda de Ordens de Compra</h2><div id="agenda-c"></div></div>
 
         <div class="vview" id="gview-dash-vendas" style="display:none">
@@ -1501,6 +1515,7 @@ function irViewG(v){
   else if(v==="cad-clientes") renderClientes("g");
   else if(v==="cad-vendedores") renderVendedores("g");
   else if(v==="cad-ondas") renderOndas("g");
+  else if(v==="dash-pcp") renderPCP();
   window.scrollTo(0,0);
 }
 
@@ -2094,7 +2109,7 @@ function renderProc(stage){
       <td>${p.c}×${p.l}×${p.a} mm</td>
       <td class="num">${(+q||0).toLocaleString("pt-BR")}</td>
       <td class="num">${(p.pesoUnit*q).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:3})} kg</td>
-      <td>${ concl ? `<div class="procacts"><span class="stb stb-rec">✓ Concluído</span>${delBtn}</div>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ stage==="imp" ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }${delBtn}</div>` }</td>
+      <td>${ concl ? `<div class="procacts"><span class="stb stb-rec">✓ Concluído</span>${delBtn}</div>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ (stage==="imp" && ehGestor()) ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }${delBtn}</div>` }</td>
     </tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody>${rows}</tbody></table></div>
     <div class="pager"><button ${page<=1?"disabled":""} onclick="${stage==="imp"?"impPage--":"acabPage--"};renderProc('${stage}')">← Anterior</button><span class="pgnum">${page}</span><button ${page>=pages?"disabled":""} onclick="${stage==="imp"?"impPage++":"acabPage++"};renderProc('${stage}')">Próximo →</button></div>`;
@@ -2163,6 +2178,42 @@ function renderExpedicao(){
     <td><button class="truckbtn" onclick="confirmarEntrega('${p.id}')" title="Confirmar entrega">🚚</button></td>
   </tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody>${rows}</tbody></table></div>`;
+}
+let pcpOpen={r:true,i:true,a:true,e:true};
+function pcpTog(k){ pcpOpen[k]=!pcpOpen[k]; renderPCP(); }
+function pcpFmtPeso(kg){ kg=+kg||0; return kg/1000>=1 ? (kg/1000).toLocaleString("pt-BR",{maximumFractionDigits:2})+" t" : kg.toLocaleString("pt-BR",{maximumFractionDigits:0})+" kg"; }
+function entregarPCP(id){ const p=producao.find(x=>x.id===id); if(!p)return; if(!confirm("Confirmar a entrega deste item? Ele sai do PCP e da Expedição.")) return; p.entregue=true; salvar(LS.prodflow,producao); renderPCP(); }
+function renderPCP(){
+  const box=$("pcp-box"); if(!box) return;
+  const f1=[];
+  ordens.filter(o=>!o.recebida).forEach(o=>{ (o.itens||[]).forEach(it=>{ f1.push({sku:it.sku, qtd:+it.qtd||0, peso:(it.pesoUnit||0)*(+it.qtd||0), oc:o.id, info:o.fornecedor}); }); });
+  const prod=producao.filter(p=>!p.terceirizado && !p.entregue);
+  const f2=prod.filter(p=>!p.imp.done).map(p=>({sku:p.sku, qtd:p.qtd, peso:p.pesoUnit*p.qtd, oc:p.ocId}));
+  const f3=prod.filter(p=>p.imp.done && !p.acab.done).map(p=>({sku:p.sku, qtd:p.imp.feito, peso:p.pesoUnit*p.imp.feito, oc:p.ocId}));
+  const f4=producao.filter(p=>p.acab.done && !p.entregue).map(p=>({sku:p.sku, qtd:p.acab.feito, peso:p.pesoUnit*p.acab.feito, oc:p.ocId, id:p.id}));
+  const sec=(k,emoji,titulo,cor,arr,truck)=>{
+    const tot=arr.reduce((s,x)=>s+(x.peso||0),0), open=pcpOpen[k];
+    const linhas = arr.length ? arr.map(x=>`
+      <div class="pcp-item">
+        <div class="pcp-isku">${esc(x.sku||"—")}</div>
+        <div class="pcp-imeta">${(x.qtd||0).toLocaleString("pt-BR")} un · ${pcpFmtPeso(x.peso)}${x.oc?` · OC ${esc(x.oc)}`:""}${x.info?` · ${esc(x.info)}`:""}</div>
+        ${truck?`<button class="truckbtn" onclick="entregarPCP('${x.id}')" title="Concluir entrega">🚚</button>`:""}
+      </div>`).join("") : `<div class="pcp-empty">Nenhum item nesta fase.</div>`;
+    return `<div class="pcp-sec">
+      <button class="pcp-head" style="--c:${cor}" onclick="pcpTog('${k}')">
+        <span class="pcp-emoji">${emoji}</span>
+        <span class="pcp-tt">${titulo}</span>
+        <span class="pcp-count">${arr.length} ${arr.length===1?"item":"itens"} · ${pcpFmtPeso(tot)}</span>
+        <span class="pcp-chev">${open?"▾":"▸"}</span>
+      </button>
+      <div class="pcp-body" style="${open?"":"display:none"}">${linhas}</div>
+    </div>`;
+  };
+  box.innerHTML =
+    sec("r","🛒","A receber (com OC)","#f5a623",f1,false) +
+    sec("i","🟡","Aguardando impressão","#eab308",f2,false) +
+    sec("a","🔵","Aguardando acabamento","#2b7fff",f3,false) +
+    sec("e","✅","Pronto na expedição","#22c55e",f4,true);
 }
 function renderTerc(){
   let lst=producao.filter(p=>p.terceirizado);
