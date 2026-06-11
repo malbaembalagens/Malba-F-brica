@@ -561,7 +561,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v45 · dados salvos neste aparelho</div>
+    <div class="foot">v47 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -1492,7 +1492,7 @@ function devItems(){
     });
   });
   devAvulsos.forEach(a=>{
-    arr.push({ key:a.key, origem:"avulso", orcId:null, cliente:"—", data:a.data||hojeStr(),
+    arr.push({ key:a.key, origem:"avulso", orcId:null, cliente:a.cliente||"—", vendedor:a.vendedor||"", data:a.data||hojeStr(),
       it:{produto:a.produto, c:a.c, l:a.l, a:a.a, ondaNome:a.ondaNome, gram:a.gram, qtd:a.qtd||0},
       entry:a, status:a.status||"desenvolvido" });
   });
@@ -2179,10 +2179,10 @@ function renderWizard(){
       ${cust?"":`<label class="flbl">Tipo de Chapa</label>
       <div class="chiprow">${tipos.map(([v,l])=>`<button class="chip ${cur===v?"on":""}" onclick="setChapaTipo('${v}')">${l}</button>`).join("")}</div>`}
       <div class="compgrid" style="margin-top:16px">
-        <div class="compf"><label>Comprimento da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.comp||""}" oninput="chapaCompChange(this.value)"></div>
-        <div class="compf"><label>Largura da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.larg||""}" oninput="chapaLargChange(this.value)"></div>
-        <div class="compf"><label>Peso unitário (kg)</label><input type="number" inputmode="decimal" step="0.00001" value="${(+peso).toFixed(5)}" oninput="pesoChange(this.value)"></div>
-        <div class="compf"><label>Custo unitário (R$)</label><input type="number" inputmode="decimal" step="0.0001" value="${(+custo).toFixed(4)}" oninput="custoChange(this.value)"></div>
+        <div class="compf"><label>Comprimento da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.comp||""}" onchange="chapaCompChange(this.value)"></div>
+        <div class="compf"><label>Largura da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.larg||""}" onchange="chapaLargChange(this.value)"></div>
+        <div class="compf"><label>Peso unitário (kg)</label><input type="number" inputmode="decimal" step="0.00001" value="${(+peso).toFixed(5)}" onchange="pesoChange(this.value)"></div>
+        <div class="compf"><label>Custo unitário (R$)</label><input type="number" inputmode="decimal" step="0.0001" value="${(+custo).toFixed(4)}" onchange="custoChange(this.value)"></div>
       </div>
       ${(!cust && f.chapaManual)?`<div class="hint">Medidas da chapa editadas manualmente. <a href="#" onclick="recalcChapa();return false" style="color:var(--accent);font-weight:700">Recalcular automaticamente</a></div>`:""}
       ${f.pesoManual?`<div class="hint">Peso editado manualmente. <a href="#" onclick="recalcPeso();return false" style="color:var(--accent);font-weight:700">Recalcular automaticamente</a></div>`:""}
@@ -2596,6 +2596,67 @@ function seedHistMeses2026(){
   localStorage.setItem("malba_os_hist_2026","1");
 }
 seedHistMeses2026();
+function seedProdutosFichas(){
+  if(localStorage.getItem("malba_os_fichas_v1")) return;
+  // [sku, produto, c, l, a, onda, gram, forn, chComp, chLarg, v1, v2, v3, cliche, ref, logo, cliente, vendedor, dataISO]
+  const D=[
+    ["CL02-SBM","Maleta",415,320,160,"C",386,"CIBRAPEL SA",1516,487,160,167,160,"CASINHA INDUSTRIAL","CASINHA INDUSTRIAL- A e E",true,"CASINHA INDUSTRIAL","","2026-05-04"],
+    ["CL04-SBM","Maleta",420,280,260,"C",386,"CIBRAPEL SA",1446,547,140,267,140,"CASINHA INDUSTRIAL","CASINHA INDUSTRIAL -C e CN",true,"CASINHA INDUSTRIAL","","2026-05-04"],
+    ["DASV01","Maleta",225,155,210,"B",344,"RCP PAPEIS UNIPESSOAL LTDA",795,371,77.5,216,77.5,"PRETO","0",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Guilherme Gabriel","2026-05-25"],
+    ["CV1","Corte e vinco",0,0,0,"T",280,"FAPOLPA",790,425,0,0,0,"0","0",false,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-06-02"],
+    ["TUDOBARATO01","Maleta",290,290,200,"C",446,"SBM Distrib de Embalagens S.A",1199,497,145,207,145,"TUDOBARATO","TUDOBARATO Nº1",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-05-28"],
+    ["TUDOBARATO22","Maleta",240,240,130,"C",386,"SBM Distrib de Embalagens S.A",999,377,120,137,120,"TUDOBARATO22","TUDOBARATO22 Nº22",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-05-28"],
+    ["MGO02","Maleta",352,302,212,"TT",470,"FAPOLPA",1351,522,151,220,151,"MGO MOLAS","MGO MOLAS",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-06-05"],
+    ["WC05","Maleta",320,180,178,"T",280,"FAPOLPA",1035,364,90,184,90,"WC05","WC CAIXAS Nº05",false,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-06-05"],
+    ["MALUDOCES03","Maleta",240,180,160,"B",346,"RCP PAPEIS UNIPESSOAL LTDA",875,346,90,166,90,"N° 03","N° 03",true,"MALU DOCES","Renato Junior","2026-06-05"],
+    ["MALUDOCES04","Maleta",320,230,110,"B",346,"RCP PAPEIS UNIPESSOAL LTDA",1135,346,115,116,115,"N° 04","N°04",true,"MALU DOCES","Renato Junior","2026-06-05"],
+    ["KDU01","Maleta",400,300,100,"B",346,"RCP PAPEIS UNIPESSOAL LTDA",1435,406,150,106,150,"KDU EMBALAGENS","N°01",false,"KDU EMBALAGENS","Alexandre Marques","2026-06-09"],
+    ["CL01","Maleta",410,280,210,"B",375,"SBM Distrib de Embalagens S.A",1415,496,140,216,140,"CASINHA INDUSTRIAL","REFERENNCIA C - CN CUBA",true,"CASINHA INDUSTRIAL","Alexandre Marques","2026-06-09"],
+    ["Imperio01","Maleta",490,380,300,"C",446,"SBM Distrib de Embalagens S.A",912,686,190,306,190,"Imperio01","0",true,"RT moto peças","Guilherme Marques","2026-06-03"],
+    ["VARIEDADES02","Maleta",338,228,540,"C",446,"SBM Distrib de Embalagens S.A",1171,775,114,547,114,"SETA CUIDADO FRAGIL","SETA CUIDADO FRAGIL",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-05-27"],
+    ["VARIEDADES01","Maleta",348,238,550,"C",446,"SBM Distrib de Embalagens S.A",1211,795,119,557,119,"SETA CUIDADO FRAGIL","SETA CUIDADO FRAGIL",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-05-27"],
+    ["CLARO01","Maleta",350,165,430,"C",386,"SBM Distrib de Embalagens S.A",1069,602,82.5,437,82.5,"CLARO","CLARO MAIS CUIDADO FRAGIL NA LARGURA",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-05-28"],
+    ["VARIEDADES03","Maleta",328,218,530,"C",446,"SBM Distrib de Embalagens S.A",1131,755,109,537,109,"REFERENCIAS","REFERENCIAS E N° 03",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Alexandre Marques","2026-06-06"],
+    ["Adisni04","Maleta",610,470,260,"C",446,"SBM Distrib de Embalagens S.A",1122,736,235,266,235,"Adisni04","0",true,"Adisni","Guilherme Marques","2026-05-25"],
+    ["KLEBER01","Maleta",900,400,380,"BC",711,"SBM Distrib de Embalagens S.A",1342,788,200,388,200,"FAROL","FAROL",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","Renato Junior","2026-05-28"],
+    ["MANUBELITA01","Maleta",400,180,140,"B",346,"RCP PAPEIS UNIPESSOAL LTDA",1202,326,90,146,90,"MANUBELITA","MANUBELITA",true,"MALBA FABRICA DE CAIXAS DE PAPELAO LTDA","","2026-04-14"]
+  ];
+  D.forEach(r=>{
+    const [sku,produto,c,l,a,onda,gram,forn,chComp,chLarg,v1,v2,v3,cliche,ref,logo,cliente,vend,data]=r;
+    const ond=ondas.find(o=>o.nome===onda);
+    const comp= ond&&ond.comp ? JSON.parse(JSON.stringify(ond.comp)) : compPadrao(onda);
+    const tipo= /MALBA FABRICA/i.test(cliente) ? "Loja" : "Cliente";
+    devAvulsos.push({ key:"av:"+uid(), sku, produto, c, l, a, ondaNome:onda, gram, fornecedor:forn,
+      tipo, comp, chapaTipo:"nenhum", chapaComp:chComp, chapaLarg:chLarg, chapaManual:true,
+      vincos:[v1,v2,v3], codigoCliche:cliche, refCliente:ref, cor1:"", cor2:"", logoMalba:logo,
+      cliente, vendedor:vend, qtd:0, data, status:"desenvolvido" });
+  });
+  salvar(LS.devav,devAvulsos);
+  localStorage.setItem("malba_os_fichas_v1","1");
+}
+seedProdutosFichas();
+function seedProdutosFichas2(){
+  if(localStorage.getItem("malba_os_fichas_v2")) return;
+  // [sku, produto, c, l, a, onda, gram, forn, chComp, chLarg, v1, v2, v3, cliche, ref, logo, cliente, vendedor, dataISO]
+  const D=[
+    ["Adisni03","Maleta",460,460,260,"C",386,"SBM Distrib de Embalagens S.A",962,726,230,266,230,"Adisni03","0",true,"Adisni","Guilherme Marques","2026-05-25"],
+    ["Adisni02","Maleta",580,290,260,"B",375,"RCP PAPEIS UNIPESSOAL LTDA",1782,556,145,266,145,"Adisni02","0",true,"Adisni","","2026-01-30"],
+    ["Adisni01","Maleta",475,310,260,"B",346,"RCP PAPEIS UNIPESSOAL LTDA",827,575,155,265,155,"Adisni01","0",true,"Adisni","Guilherme Marques","2026-05-25"]
+  ];
+  D.forEach(r=>{
+    const [sku,produto,c,l,a,onda,gram,forn,chComp,chLarg,v1,v2,v3,cliche,ref,logo,cliente,vend,data]=r;
+    const ond=ondas.find(o=>o.nome===onda);
+    const comp= ond&&ond.comp ? JSON.parse(JSON.stringify(ond.comp)) : compPadrao(onda);
+    const tipo= /MALBA FABRICA/i.test(cliente) ? "Loja" : "Cliente";
+    devAvulsos.push({ key:"av:"+uid(), sku, produto, c, l, a, ondaNome:onda, gram, fornecedor:forn,
+      tipo, comp, chapaTipo:"nenhum", chapaComp:chComp, chapaLarg:chLarg, chapaManual:true,
+      vincos:[v1,v2,v3], codigoCliche:cliche, refCliente:ref, cor1:"", cor2:"", logoMalba:logo,
+      cliente, vendedor:vend, qtd:0, data, status:"desenvolvido" });
+  });
+  salvar(LS.devav,devAvulsos);
+  localStorage.setItem("malba_os_fichas_v2","1");
+}
+seedProdutosFichas2();
 preencherSelects();
 render();
 </script>
