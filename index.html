@@ -97,10 +97,39 @@ input,select,textarea{font-family:inherit;font-size:15px}
   .vlayout.deskcol .drawer{display:none}
   .vlayout.deskcol .railbar{display:flex}
 }
-@media(max-width:560px){ .railbar{width:54px;padding:9px 6px} .rail-btn .ri{font-size:18px} }
+@media(max-width:899px){
+  .vlayout{flex-direction:column;gap:10px}
+  .railbar{flex-direction:row;width:100%;gap:8px;padding:8px;overflow-x:auto;position:sticky;top:70px;border-radius:14px}
+  .railbar::-webkit-scrollbar{display:none}
+  .rail-btn{flex:1 1 0;min-width:0;width:auto;padding:8px 6px}
+  .rail-btn small{display:block;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .rail-btn.on{background:var(--accent-soft);border-color:var(--accent)}
+  .rail-btn.on small{color:var(--accent)}
+  .scrim{display:none!important}
+  .drawer{position:static;transform:none!important;width:100%;max-width:100%;height:auto;background:none;border:none;border-right:none;box-shadow:none;padding:0;overflow:visible;z-index:auto}
+  .drawer-head{display:none}
+  .drawer .navgroup{display:none}
+  .drawer .navsub{padding:0}
+  .drawer .navsub:not(.collapsed){display:flex;flex-wrap:wrap;gap:8px;padding:2px}
+  .drawer .navitem.subitem{width:auto;padding:9px 14px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);font-size:13px}
+  .drawer .navitem.subitem.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .drawer .navmini{padding:6px 4px}
+}
+@media(max-width:560px){ .rail-btn .ri{font-size:18px} .rail-btn small{font-size:10.5px} }
 
 /* Toolbar orçamentos */
-.toolbar{display:flex;gap:11px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.toolbar .search{width:100%;min-width:0;border-radius:14px;padding:15px 16px;font-size:15px}
+.toolbar .filtros{display:flex;gap:12px}
+.toolbar .seldate{flex:1;min-width:0;border-radius:14px;padding:14px;font-size:14px}
+.toolbar .newbtn{width:100%;justify-content:center;padding:16px;font-size:15px;border-radius:14px}
+@media(min-width:900px){
+  .toolbar{flex-direction:row;flex-wrap:wrap;align-items:center}
+  .toolbar .search{flex:1;width:auto}
+  .toolbar .filtros{flex:none}
+  .toolbar .seldate{flex:none;min-width:150px}
+  .toolbar .newbtn{width:auto;padding:0 22px;height:50px}
+}
 .search{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px;color:var(--text);box-shadow:var(--shadow)}
 .search::placeholder{color:var(--muted-2)}
 .seldate{flex:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);box-shadow:var(--shadow);min-width:150px}
@@ -487,6 +516,11 @@ tbody tr:hover{background:var(--surface-2)}
   #print .ptab th{color:#667085;font-weight:700;text-align:left;padding:6px 10px;border:none;border-right:1px solid #cfd5dd;text-transform:uppercase;font-size:9.5px;letter-spacing:.04em}
   #print .ptab td{padding:6px 10px;border:none;border-right:1px solid #cfd5dd}
   #print .ptab th:last-child,#print .ptab td:last-child{border-right:none}
+  #print .ptab{display:table!important;width:100%}
+  #print .ptab tbody{display:table-row-group!important}
+  #print .ptab tr{display:table-row!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;padding:0!important}
+  #print .ptab th,#print .ptab td{display:table-cell!important;width:auto!important}
+  #print .ptab th::before,#print .ptab td::before{content:none!important}
   #print .ptotal{display:flex;justify-content:space-between;align-items:center;background:#f6f7f9;border-radius:10px;padding:16px 18px;margin-top:16px}
   #print .ptotal span{font-size:14px;color:#111;font-weight:700}
   #print .ptotal b{font-size:24px;font-weight:800;color:#000}
@@ -523,7 +557,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v39 · dados salvos neste aparelho</div>
+    <div class="foot">v40 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -535,7 +569,7 @@ tbody tr:hover{background:var(--surface-2)}
     <div class="vlayout">
       <div class="scrim" onclick="closeDrawer()"></div>
       <nav class="railbar">
-        <button class="rail-btn" onclick="irView('orcamentos')" title="Orçamentos"><span class="ri">🧾</span><small>Orçam.</small></button>
+        <button class="rail-btn" onclick="railLeaf(this,'orcamentos')" title="Orçamentos"><span class="ri">🧾</span><small>Orçam.</small></button>
         <button class="rail-btn" onclick="railOpen('cadastro')" title="Cadastro"><span class="ri">📁</span><small>Cadastro</small></button>
         <button class="rail-btn" onclick="railOpen('dashboard')" title="Dashboard"><span class="ri">📊</span><small>Dashboard</small></button>
       </nav>
@@ -561,12 +595,14 @@ tbody tr:hover{background:var(--surface-2)}
         <!-- Orçamentos -->
         <div class="vview" id="view-orcamentos">
           <div class="toolbar">
-            <input class="search" id="busca" placeholder="🔍  Pesquisar por ID ou nome do cliente" oninput="render()">
-            <select class="seldate" id="filtro" onchange="render()">
-              <option value="all">Qualquer data</option><option value="hoje">Hoje</option>
-              <option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option>
-            </select>
-            <select class="seldate" id="filtro-mes" onchange="render()"><option value="all">Todos os meses</option></select>
+            <input class="search" id="busca" placeholder="🔍  Pesquisar por ID do pedido ou nome do cliente" oninput="render()">
+            <div class="filtros">
+              <select class="seldate" id="filtro" onchange="render()">
+                <option value="all">Qualquer data</option><option value="hoje">Hoje</option>
+                <option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option>
+              </select>
+              <select class="seldate" id="filtro-mes" onchange="render()"><option value="all">Todos os meses</option></select>
+            </div>
             <button class="newbtn" onclick="novoOrcamento()">＋ Novo orçamento</button>
           </div>
           <div class="tabs">
@@ -1227,7 +1263,8 @@ function expandGroup(scrId,key){
     sub.classList.toggle("collapsed", !open);
   });
 }
-function railOpen(key){ const scr=document.querySelector(".screen.on"); if(!scr) return; const v=scr.querySelector(".vlayout"); if(v) v.classList.remove("deskcol"); openDrawer(); expandGroup(scr.id,key); }
+function railOpen(key){ const scr=document.querySelector(".screen.on"); if(!scr) return; const v=scr.querySelector(".vlayout"); if(v) v.classList.remove("deskcol"); scr.querySelectorAll(".rail-btn").forEach(b=>b.classList.toggle("on",(b.getAttribute("onclick")||"").includes("'"+key+"'"))); openDrawer(); expandGroup(scr.id,key); }
+function railLeaf(el,view){ const scr=document.querySelector(".screen.on"); if(scr){ scr.querySelectorAll(".rail-btn").forEach(b=>b.classList.remove("on")); el.classList.add("on"); scr.querySelectorAll(".navsub").forEach(s=>s.classList.add("collapsed")); scr.querySelectorAll(".navgroup").forEach(g=>g.classList.add("collapsed")); } irView(view); }
 function toggleDeskMenu(){ const v=document.querySelector(".screen.on .vlayout"); if(v) v.classList.toggle("deskcol"); }
 function abrirConstrucao(n,e,d){ $("cs-nome").textContent=n; $("cs-emoji").textContent=e; $("cs-desc").textContent=d; show("tela-construcao"); }
 function irView(v){
