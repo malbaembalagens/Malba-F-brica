@@ -560,7 +560,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirVendas()"><div class="ic">🎯</div><div class="tx"><b>Vendas</b><span>Orçamentos, cadastro e dashboard</span></div><div class="arr">›</div></button>
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
-    <div class="foot">v42 · dados salvos neste aparelho</div>
+    <div class="foot">v43 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ VENDAS ============ -->
@@ -1502,7 +1502,7 @@ function devChapaInfo(x){
   const e=x.entry||{}, it=x.it;
   const onda=ondas.find(o=>o.nome===(e.ondaNome||it.ondaNome));
   const comp=e.comp||(onda&&onda.comp)||compPadrao(it.ondaNome);
-  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp, chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp, chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l), chapaManual:!!e.chapaManual };
   return chapaDims(f);
 }
 function renderDesenv(){
@@ -1564,7 +1564,7 @@ function excluirDev(key){
 function fichaTecnica(key){
   const x=devItems().find(d=>d.key===key); if(!x) return;
   const it=x.it, e=x.entry||{}, d=devChapaInfo(x);
-  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", fornecedor:e.fornecedor, chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l), chapaManual:!!e.chapaManual };
   const peso=chapaPeso(f), custo=chapaCusto(f);
   const tipoLbl={nenhum:"Nenhum",meia:"Meia chapa",dupla:"Chapa dupla",contra:"Contra onda"}[f.chapaTipo||"nenhum"];
   const c=e.comp||compPadrao(it.ondaNome);
@@ -1792,7 +1792,7 @@ function ocAddPick(){
   const q=Math.max(1,parseInt(window._ocq)||0);
   const x=ocDevList().find(d=>d.key===ocForm._pickKey); if(!x){ alert("Produto não encontrado."); return; }
   const it=x.it, e=x.entry||{}, d=devChapaInfo(x);
-  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l) };
+  const f={ produto:e.produto||it.produto, c:e.c!=null?e.c:it.c, l:e.l!=null?e.l:it.l, a:e.a!=null?e.a:it.a, gram:e.gram!=null?e.gram:it.gram, comp:e.comp||compPadrao(it.ondaNome), chapaTipo:e.chapaTipo||"nenhum", chapaComp:e.chapaComp!=null?e.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c), chapaLarg:e.chapaLarg!=null?e.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l), chapaManual:!!e.chapaManual };
   ocForm.itens.push({ key:x.key, sku:e.sku||"", produto:it.produto, c:it.c,l:it.l,a:it.a, chapaComp:Math.round(d.comp), chapaLarg:Math.round(d.larg), gram:f.gram, ondaNome:it.ondaNome, vincos:(e.vincos||[]).slice(), qtd:q, pesoUnit:chapaPeso(f) });
   ocForm._pickKey=""; window._ocb=""; window._ocq=""; renderNovaOC();
 }
@@ -1997,6 +1997,7 @@ function abrirDesenvWizard(key){
     chapaTipo: s.chapaTipo||"nenhum",
     chapaComp: s.chapaComp!=null?s.chapaComp:(it.chapaComp!=null?it.chapaComp:it.c),
     chapaLarg: s.chapaLarg!=null?s.chapaLarg:(it.chapaLarg!=null?it.chapaLarg:it.l),
+    chapaManual: !!s.chapaManual,
     vincos: Array.isArray(s.vincos)&&s.vincos.length? s.vincos.slice() : null,
     codigoCliche: s.codigoCliche||"", refCliente: s.refCliente||"", cor1: s.cor1||"", cor2: s.cor2||"",
     logoMalba: !!s.logoMalba, pdfNome: s.pdfNome||"", pdfData: s.pdfData||"",
@@ -2009,7 +2010,10 @@ function stepSeq(){ return isCustom(devForm)?[1,2,4,5]:[1,2,3,4,5]; }
 function wizNav(d){ const seq=stepSeq(); let idx=seq.indexOf(devStep); if(idx<0) idx=0; idx=Math.min(seq.length-1,Math.max(0,idx+d)); devStep=seq[idx]; saveDraft(); renderWizard(); }
 // --- cálculos da chapa (etapa 4) ---
 function chapaDims(f){
-  if(isCustom(f) && (+f.chapaComp||+f.chapaLarg)) return { comp:Math.round((+f.chapaComp||0)*100)/100, larg:Math.round((+f.chapaLarg||0)*100)/100 };
+  if((isCustom(f)||f.chapaManual) && (+f.chapaComp||+f.chapaLarg)) return { comp:Math.round((+f.chapaComp||0)*100)/100, larg:Math.round((+f.chapaLarg||0)*100)/100 };
+  return chapaCalc(f);
+}
+function chapaCalc(f){
   const t=compTotais({comp:f.comp});
   let comp=2*((+f.c||0)+(+f.l||0))+t.abaComp;
   let larg=(+f.l||0)+(+f.a||0)+t.folgaLarg;
@@ -2035,7 +2039,10 @@ function chapaPesoAny(f){ const d=chapaDimsAny(f); return (d.comp*d.larg/1e6)*(+
 function chapaCustoAny(f){ return fornCusto(f.fornecedor)*chapaPesoAny(f); }
 function zerarVincos(){ devForm.vincos=[0,0,0]; renderWizard(); }
 function vincosSoma(v){ return (v||[]).reduce((s,x)=>s+(+x||0),0); }
-function setChapaTipo(t){ devForm.chapaTipo=t; renderWizard(); }
+function setChapaTipo(t){ devForm.chapaTipo=t; devForm.chapaManual=false; renderWizard(); }
+function chapaCompChange(val){ devForm.chapaComp=parseFloat(String(val).replace(",","."))||0; devForm.chapaManual=true; renderWizard(); }
+function chapaLargChange(val){ devForm.chapaLarg=parseFloat(String(val).replace(",","."))||0; devForm.chapaManual=true; renderWizard(); }
+function recalcChapa(){ devForm.chapaManual=false; renderWizard(); }
 function addVinco(){ if(!Array.isArray(devForm.vincos)) devForm.vincos=vincosPadrao(devForm); devForm.vincos.push(0); renderWizard(); }
 function vincoChange(i,val){ devForm.vincos[i]=parseFloat(String(val).replace(",","."))||0; renderWizard(); }
 function anexarPdf(input){ const file=input.files[0]; if(!file)return; if(file.size>5*1024*1024){ alert("PDF acima de 5Mb."); input.value=""; return; } devForm.pdfNome=file.name; const r=new FileReader(); r.onload=e=>{ devForm.pdfData=e.target.result; const el=$("cliche-pdfname"); if(el) el.textContent="📎 "+file.name; }; r.readAsDataURL(file); }
@@ -2149,23 +2156,24 @@ function renderWizard(){
   } else if(devStep===4){
     if(!Array.isArray(f.vincos)||!f.vincos.length) devForm.vincos=vincosPadrao(f);
     const cust=isCustom(f);
-    const d=chapaDimsAny(f), peso=chapaPesoAny(f), custo=chapaCustoAny(f);
+    const manual=cust||!!f.chapaManual;
+    if(!manual){ const auto=chapaCalc(f); devForm.chapaComp=auto.comp; devForm.chapaLarg=auto.larg; }
+    const d={ comp:+f.chapaComp||0, larg:+f.chapaLarg||0 };
+    const peso=(d.comp*d.larg/1e6)*(+f.gram||0)/1000;
+    const custo=fornCusto(f.fornecedor)*peso;
     const soma=vincosSoma(f.vincos), semVinco=soma===0, ok=semVinco||Math.abs(soma-d.larg)<0.5;
     const tipos=[["nenhum","Nenhum"],["meia","Meia Chapa"],["dupla","Chapa Dupla"],["contra","Contra Onda"]];
     const cur=f.chapaTipo||"nenhum";
-    const chapaCampos = cust ? `
-        <div class="compf"><label>Comprimento da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${f.chapaComp||""}" oninput="devForm.chapaComp=parseFloat(String(this.value).replace(',','.'))||0;renderWizard()"></div>
-        <div class="compf"><label>Largura da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${f.chapaLarg||""}" oninput="devForm.chapaLarg=parseFloat(String(this.value).replace(',','.'))||0;renderWizard()"></div>` : `
-        <div class="compf"><label>Comprimento da chapa (mm)</label><input class="locked" value="${d.comp}" readonly></div>
-        <div class="compf"><label>Largura da chapa (mm)</label><input class="locked" value="${d.larg}" readonly></div>`;
     content=`<div class="formcard">
       ${cust?"":`<label class="flbl">Tipo de Chapa</label>
       <div class="chiprow">${tipos.map(([v,l])=>`<button class="chip ${cur===v?"on":""}" onclick="setChapaTipo('${v}')">${l}</button>`).join("")}</div>`}
       <div class="compgrid" style="margin-top:16px">
-        ${chapaCampos}
+        <div class="compf"><label>Comprimento da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.comp||""}" oninput="chapaCompChange(this.value)"></div>
+        <div class="compf"><label>Largura da chapa (mm) *</label><input type="number" inputmode="numeric" step="0.1" value="${d.larg||""}" oninput="chapaLargChange(this.value)"></div>
         <div class="compf"><label>Peso unitário (kg)</label><input class="locked" value="${peso.toFixed(5)}" readonly></div>
         <div class="compf"><label>Custo unitário (R$)</label><input class="locked" value="${custo.toFixed(4)}" readonly></div>
       </div>
+      ${(!cust && f.chapaManual)?`<div class="hint">Medidas da chapa editadas manualmente. <a href="#" onclick="recalcChapa();return false" style="color:var(--accent);font-weight:700">Recalcular automaticamente</a></div>`:""}
       <label class="flbl" style="margin-top:18px">Vincos (mm)${f.fornecedor&&!fornCusto(f.fornecedor)?` <small style="color:var(--amber);font-weight:600">· fornecedor sem custo cadastrado</small>`:""}</label>
       <div class="vincorow">
         ${f.vincos.map((v,i)=>`<input class="vinco ${ok?"":"bad"}" type="number" step="0.1" value="${v}" onchange="vincoChange(${i},this.value)">`).join("")}
