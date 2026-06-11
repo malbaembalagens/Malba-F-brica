@@ -599,7 +599,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v57 · dados salvos neste aparelho</div>
+    <div class="foot">v59 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -630,6 +630,7 @@ tbody tr:hover{background:var(--surface-2)}
 
       <div class="synccard" id="sync-actions">
         <button class="btn ghost full" onclick="syncAgora()">🔄 Sincronizar agora</button>
+        <button class="btn ghost full" onclick="recuperarBackup()">⏪ Recuperar dados do backup</button>
         <button class="btn ghost full danger" onclick="syncDesconectar()">Desconectar este aparelho</button>
       </div>
 
@@ -1110,6 +1111,41 @@ function reloadState(){
 }
 function syncRefreshUI(){ try{ preencherSelects(); render(); renderDashProd(); }catch(e){} }
 function syncSetStatus(s){ syncStatus=s; try{ renderSyncScreen(); }catch(e){} }
+function isEmptyVal(v){ return v==null || (Array.isArray(v)&&v.length===0) || (typeof v==="object"&&!Array.isArray(v)&&Object.keys(v).length===0); }
+function lsParse(k){ try{ const r=localStorage.getItem(k); return r==null?null:JSON.parse(r); }catch(e){ return null; } }
+function bakParse(s){ try{ return s==null?null:JSON.parse(s); }catch(e){ return null; } }
+function mergeHist(localArr, cloudArr){
+  const out=[], seenId=new Set(), seenSig=new Set();
+  const sig=h=> (!h.sku && !(+h.qtdProd) && h.pesoTotalProd) ? ("MES|"+h.processo+"|"+h.data+"|"+h.pesoTotalProd) : null;
+  const add=h=>{ if(!h) return; const s=sig(h); if(h.id!=null && seenId.has(h.id)) return; if(s && seenSig.has(s)) return; out.push(h); if(h.id!=null) seenId.add(h.id); if(s) seenSig.add(s); };
+  (Array.isArray(localArr)?localArr:[]).forEach(add);
+  (Array.isArray(cloudArr)?cloudArr:[]).forEach(add);
+  return out;
+}
+function recuperarBackup(){
+  const raw=localStorage.getItem("malba_sync_backup");
+  if(!raw){ alert("Não há backup salvo neste aparelho.\n\n(O backup é criado quando o aparelho baixa dados da nuvem pela primeira vez. Tente em outro aparelho onde os dados ainda apareçam.)"); return; }
+  let bk; try{ bk=JSON.parse(raw); }catch(e){ alert("Backup ilegível neste aparelho."); return; }
+  const planos=[
+    [LS.hist,"lançamentos de produção",h=>h.id, x=>(x.sku||(+x.qtdProd||0)>0||(+x.qtdDesp||0)>0)],
+    [LS.prodflow,"itens em produção",x=>x.id, null],
+    [LS.oc,"ordens de compra",x=>x.id, null],
+    [LS.orc,"orçamentos",x=>x.id, null],
+    [LS.devav,"produtos desenvolvidos",x=>x.key, null]
+  ];
+  const msgs=[];
+  planos.forEach(([k,nome,idf,filt])=>{
+    let bakArr=bakParse(bk[k]); if(!Array.isArray(bakArr)) return;
+    if(filt) bakArr=bakArr.filter(filt);
+    const cur=lsParse(k); const curArr=Array.isArray(cur)?cur:[];
+    const seen=new Set(curArr.map(idf));
+    let added=0;
+    bakArr.forEach(x=>{ const id=idf(x); if(id!=null && !seen.has(id)){ curArr.push(x); seen.add(id); added++; } });
+    if(added>0){ salvar(k,curArr); msgs.push(added+" "+nome); }
+  });
+  reloadState(); try{ render(); }catch(e){} try{ renderDashProd(); }catch(e){}
+  alert(msgs.length ? ("Recuperado do backup: "+msgs.join(", ")+".\n\nOs dados foram reenviados pra nuvem.") : "O backup deste aparelho não tinha itens novos pra recuperar (o que havia nele já está no sistema).");
+}
 async function syncInit(){
   if(!syncOn) return;
   syncSetStatus("conectando");
@@ -1120,8 +1156,17 @@ async function syncInit(){
       for(const k of SYNC_KEYS){ const raw=localStorage.getItem(k); if(raw!==null){ await cloudUpsert(k, JSON.parse(raw)); syncVer[k]=new Date().toISOString(); } }
     } else {
       if(!localStorage.getItem("malba_sync_backup")){ const bk={}; SYNC_KEYS.forEach(k=>bk[k]=localStorage.getItem(k)); localStorage.setItem("malba_sync_backup", JSON.stringify(bk)); }
-      keys.forEach(k=>{ localStorage.setItem(k, JSON.stringify(cloud[k].value)); syncVer[k]=cloud[k].updated_at; });
-      reloadState(); syncRefreshUI();
+      keys.forEach(k=>{
+        if(k===LS.hist){
+          const merged=mergeHist(lsParse(k), cloud[k].value), ms=JSON.stringify(merged);
+          localStorage.setItem(k, ms); syncVer[k]=cloud[k].updated_at;
+          if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
+          return;
+        }
+        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; return; }
+        localStorage.setItem(k, JSON.stringify(cloud[k].value)); syncVer[k]=cloud[k].updated_at;
+      });
+      reloadState(); syncRefreshUI(); flushPending();
     }
     syncSetStatus("online"); syncStartPolling();
   }catch(e){ console.warn("sync init",e); syncSetStatus("erro"); }
@@ -1133,6 +1178,14 @@ async function syncPull(){
     Object.keys(cloud).forEach(k=>{
       if(!SYNC_KEYS.includes(k)||pendingPush[k]) return;
       if(cloud[k].updated_at && cloud[k].updated_at!==syncVer[k]){
+        if(k===LS.hist){
+          const merged=mergeHist(lsParse(k), cloud[k].value), ms=JSON.stringify(merged);
+          if(localStorage.getItem(k)!==ms){ localStorage.setItem(k,ms); changed=true; }
+          syncVer[k]=cloud[k].updated_at;
+          if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
+          return;
+        }
+        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; syncVer[k]=cloud[k].updated_at; return; }
         const nv=JSON.stringify(cloud[k].value);
         if(localStorage.getItem(k)!==nv){ localStorage.setItem(k,nv); changed=true; }
         syncVer[k]=cloud[k].updated_at;
@@ -3010,10 +3063,22 @@ function repararOrdens(){
   if(added){ salvar(LS.oc,ordens); try{ renderOC(); }catch(e){} try{ renderPCP(); }catch(e){} }
   localStorage.setItem("malba_os_ocs_rep_v1","1");
 }
+function repararHistorico(){
+  if(localStorage.getItem("malba_os_hist_rep_v1")) return;
+  const meses=[["2026-01-15",28],["2026-02-15",24],["2026-03-15",31],["2026-04-15",29],["2026-05-15",27.5]];
+  let added=false;
+  meses.forEach(([data,ton])=>{
+    const kg=ton*1000;
+    const existe=historico.some(h=>h.processo==="Acabamento" && h.data===data && Math.abs((+h.pesoTotalProd||0)-kg)<1);
+    if(!existe){ historico.push({ id:uid(), data, processo:"Acabamento", sku:"", pesoUnit:0, qtdProd:0, pesoTotalProd:kg, qtdDesp:0, pesoTotalDesp:0 }); added=true; }
+  });
+  if(added){ salvar(LS.hist,historico); try{ renderDashProd(); }catch(e){} }
+  localStorage.setItem("malba_os_hist_rep_v1","1");
+}
 preencherSelects();
 render();
 try{ renderSyncScreen(); }catch(e){}
-(async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} })();
+(async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} try{ repararHistorico(); }catch(e){} })();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && syncOn){ flushPending().then(syncPull); } });
 </script>
 </body>
