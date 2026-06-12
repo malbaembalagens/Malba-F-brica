@@ -599,7 +599,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v61 · dados salvos neste aparelho</div>
+    <div class="foot">v62 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -3050,17 +3050,7 @@ function seedOrdensCompra(){
   localStorage.setItem("malba_os_ocs_v1","1");
 }
 seedOrdensCompra();
-function fixOcsNaoRecebidas(){
-  if(localStorage.getItem("malba_os_ocs_naorec_v1")) return;
-  const ids=["01062026001","02062026002","05062026001","05062026002","08052026002","20052026001","22052026001","25052026001","25052026002","28052026001"];
-  let changed=false;
-  ordens.forEach(o=>{ if(ids.includes(String(o.id)) && o.recebida){ o.recebida=false; changed=true; } });
-  const antes=producao.length;
-  producao = producao.filter(p=> !(ids.includes(String(p.ocId)) && ((p.imp&&p.imp.feito)||0)===0 && ((p.acab&&p.acab.feito)||0)===0) );
-  if(changed) salvar(LS.oc,ordens);
-  if(producao.length!==antes) salvar(LS.prodflow,producao);
-  localStorage.setItem("malba_os_ocs_naorec_v1","1");
-}
+function fixOcsNaoRecebidas(){ /* desativado na v62: não deve mais desfazer recebimentos feitos pelo usuário */ localStorage.setItem("malba_os_ocs_naorec_v1","1"); }
 fixOcsNaoRecebidas();
 function repararOrdens(){
   if(localStorage.getItem("malba_os_ocs_rep_v1")) return;
