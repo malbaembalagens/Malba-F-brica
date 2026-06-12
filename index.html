@@ -599,7 +599,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v59 · dados salvos neste aparelho</div>
+    <div class="foot">v61 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -658,7 +658,6 @@ tbody tr:hover{background:var(--surface-2)}
         <div class="navsub collapsed">
           <button class="navitem subitem" data-v="clientes" onclick="irView('clientes')">Clientes</button>
           <button class="navitem subitem" data-v="vendedores" onclick="irView('vendedores')">Vendedores</button>
-          <button class="navitem subitem" data-v="ondas" onclick="irView('ondas')">Onda e gramatura</button>
         </div>
         <button class="navgroup collapsed" data-g="dashboard" onclick="toggleGroup(this)">📊 Dashboard <span class="chev">▾</span></button>
         <div class="navsub collapsed">
@@ -1515,7 +1514,7 @@ function calcCaixa(c,l,a,onda){
 // navegação
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); $(id).classList.add("on"); window.scrollTo(0,0); }
 function irPerfis(){ show("tela-perfis"); }
-function abrirVendas(){ show("tela-vendas"); irView("dash-vendas"); }
+function abrirVendas(){ show("tela-vendas"); irView("orcamentos"); }
 function toggleSide(){ const v=document.querySelector(".screen.on .vlayout"); if(v) v.classList.toggle("sidehidden"); }
 function toggleGroup(el){ const sub=el.nextElementSibling; if(sub&&sub.classList.contains("navsub")){ sub.classList.toggle("collapsed"); el.classList.toggle("collapsed"); } }
 function openDrawer(){ const v=document.querySelector(".screen.on .vlayout"); if(v) v.classList.add("menuopen"); }
@@ -1546,7 +1545,15 @@ function irView(v){
   else if(v==="dash-fabrica") renderDashFabrica();
   window.scrollTo(0,0);
 }
-function abrirGestor(){ const g=document.getElementById("tela-gestor"); g.classList.remove("modo-prod"); const t=document.getElementById("gestor-drawer-title"); if(t)t.textContent="Gestor"; show("tela-gestor"); irViewG("dash-prod"); }
+function abrirGestor(){
+  if(sessionStorage.getItem("malba_gestor_ok")!=="1"){
+    const s=prompt("Senha de acesso ao Gestor:");
+    if(s===null) return;
+    if(s.trim().toLowerCase()!=="xandegigante"){ alert("Senha incorreta."); return; }
+    sessionStorage.setItem("malba_gestor_ok","1");
+  }
+  const g=document.getElementById("tela-gestor"); g.classList.remove("modo-prod"); const t=document.getElementById("gestor-drawer-title"); if(t)t.textContent="Gestor"; show("tela-gestor"); irViewG("dash-prod");
+}
 function abrirProducao(){ const g=document.getElementById("tela-gestor"); g.classList.add("modo-prod"); const t=document.getElementById("gestor-drawer-title"); if(t)t.textContent="Produção"; show("tela-gestor"); irViewG("dash-prod"); }
 function irViewG(v){
   closeDrawer();
