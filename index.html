@@ -133,6 +133,24 @@ input,select,textarea{font-family:inherit;font-size:15px}
   .drawer .navmini{padding:6px 4px}
 }
 @media(max-width:560px){ .rail-btn .ri{font-size:18px} .rail-btn small{font-size:10.5px} }
+@media(max-width:560px){
+  .chartcard{padding:13px}
+  .charthead h3{font-size:15px}
+  .stats{grid-template-columns:1fr 1fr;gap:10px}
+  .stat{padding:13px 14px}
+  .stat .v{font-size:20px}
+  .ringchart{gap:12px}
+  .ring{width:124px;height:124px}
+  .ringbig{min-width:128px}
+  .ringbig .rb-ton{font-size:19px}
+  .metawrap{gap:14px}
+  .metatarget{width:112px;height:112px}
+  .recgrid{grid-template-columns:1fr}
+  .colchart{height:168px}
+  .charttotal{padding:8px 11px}
+  .charttotal .ct-val{font-size:22px}
+  .seg button{padding:6px 10px;font-size:12px}
+}
 
 /* Toolbar orçamentos */
 .toolbar{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
@@ -389,6 +407,8 @@ tbody tr:hover{background:var(--surface-2)}
 .pcp-imeta{font-size:12px;color:var(--muted);flex:1;line-height:1.4}
 .pcp-empty{padding:16px 15px;color:var(--muted-2);font-size:13px;text-align:center}
 .delbtn{width:34px;height:34px;border-radius:9px;border:1px solid #f3c2c2;background:#fdeaea;color:#c0392b;font-size:15px;font-weight:800;cursor:pointer;display:inline-grid;place-items:center}
+.ficbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);font-size:15px;cursor:pointer;display:inline-grid;place-items:center}
+.ficbtn:active{filter:brightness(.95)}
 .delbtn:active{filter:brightness(.95)}
 .tercbtn{padding:0 14px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
 .tercbtn:hover{border-color:var(--accent);color:var(--accent)}
@@ -599,7 +619,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v62 · dados salvos neste aparelho</div>
+    <div class="foot">v65 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -1030,7 +1050,7 @@ const LS = { orc:"malba_os_orcamentos_v1", seq:"malba_os_seq_v1", cli:"malba_os_
 
 // util
 function carregar(k,def){ try{ const v=JSON.parse(localStorage.getItem(k)); return (v===null||v===undefined)?def:v }catch(e){ return def } }
-function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); try{ if(typeof syncPush==="function") syncPush(k); }catch(e){} }
+function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); try{ if(appReady && typeof SYNC_KEYS!=="undefined" && SYNC_KEYS.includes(k)) setLocalMod(k); if(typeof syncPush==="function") syncPush(k); }catch(e){} }
 function brl(n){ return "R$ " + (Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) }
 function hoje(){ return new Date() }
 function fmtData(iso){ return new Date(iso).toLocaleDateString("pt-BR") }
@@ -1076,7 +1096,10 @@ let SUPA_KEY = localStorage.getItem("malba_sync_key")||DEFAULT_SUPA_KEY;
 let syncOff = localStorage.getItem("malba_sync_off")==="1";
 let syncOn = !syncOff && !!(SUPA_URL && SUPA_KEY);
 let syncStatus = syncOn?"conectando":"off";   // off | conectando | online | erro
-let pendingPush = {}, syncVer = {}, syncPollTimer = null;
+let pendingPush = {}, syncVer = {}, syncPollTimer = null, appReady = false;
+function modKey(k){ return "malba_mod_"+k; }
+function localMod(k){ return localStorage.getItem(modKey(k)); }
+function setLocalMod(k,t){ try{ localStorage.setItem(modKey(k), t||new Date().toISOString()); }catch(e){} }
 function syncBase(){ return SUPA_URL.replace(/\/+$/,""); }
 function syncHeaders(){ return { "apikey":SUPA_KEY, "Authorization":"Bearer "+SUPA_KEY, "Content-Type":"application/json" }; }
 async function cloudPullAll(){
@@ -1089,7 +1112,7 @@ async function cloudPullAll(){
 async function cloudUpsert(key,value){
   const r = await fetch(syncBase()+"/rest/v1/malba_kv?on_conflict=key", {
     method:"POST", headers:Object.assign({Prefer:"resolution=merge-duplicates"},syncHeaders()),
-    body:JSON.stringify([{ key, value, updated_at:new Date().toISOString() }]) });
+    body:JSON.stringify([{ key, value, updated_at: localMod(key)||new Date().toISOString() }]) });
   if(!r.ok) throw new Error("upsert "+r.status);
 }
 function reloadState(){
@@ -1162,8 +1185,10 @@ async function syncInit(){
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
           return;
         }
-        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; return; }
-        localStorage.setItem(k, JSON.stringify(cloud[k].value)); syncVer[k]=cloud[k].updated_at;
+        const cu=cloud[k].updated_at, lm=localMod(k);
+        if(lm && cu && new Date(lm) > new Date(cu)){ pendingPush[k]=true; syncVer[k]=cu; return; }
+        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; syncVer[k]=cu; return; }
+        localStorage.setItem(k, JSON.stringify(cloud[k].value)); setLocalMod(k,cu); syncVer[k]=cu;
       });
       reloadState(); syncRefreshUI(); flushPending();
     }
@@ -1184,10 +1209,12 @@ async function syncPull(){
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
           return;
         }
-        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; syncVer[k]=cloud[k].updated_at; return; }
+        const cu=cloud[k].updated_at, lm=localMod(k);
+        if(lm && cu && new Date(lm) > new Date(cu)){ pendingPush[k]=true; syncVer[k]=cu; return; }
+        if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; syncVer[k]=cu; return; }
         const nv=JSON.stringify(cloud[k].value);
         if(localStorage.getItem(k)!==nv){ localStorage.setItem(k,nv); changed=true; }
-        syncVer[k]=cloud[k].updated_at;
+        setLocalMod(k,cu); syncVer[k]=cu;
       }
     });
     if(changed){ reloadState(); syncRefreshUI(); }
@@ -1831,6 +1858,12 @@ function excluirDev(key){
   else { desenvStatus[key]={status:"excluido"}; salvar(LS.dev,desenvStatus); }
   renderDesenv();
 }
+function fichaPorSku(sku){
+  if(!sku){ alert("Item sem SKU."); return; }
+  const x=devItems().find(d=> d.entry && String(d.entry.sku)===String(sku));
+  if(!x){ alert("Ficha técnica não encontrada para o SKU "+sku+".\n\nEsse produto pode não estar cadastrado no Desenvolvimento."); return; }
+  fichaTecnica(x.key);
+}
 function fichaTecnica(key){
   const x=devItems().find(d=>d.key===key); if(!x) return;
   const it=x.it, e=x.entry||{}, d=devChapaInfo(x);
@@ -1932,7 +1965,7 @@ function renderOC(){
       <button class="ic-btn ed" onclick="ocDetalhes('${o.id}')" title="Detalhes">👁️</button>
       <button class="ic-btn pdf" onclick="ocPDF('${o.id}')" title="PDF da ordem">📄</button>
       <button class="ic-btn ${o.recebida?"":"ok"}" onclick="ocReceber('${o.id}')" title="${o.recebida?"Reabrir":"Marcar recebida"}">${o.recebida?"↩︎":"✓"}</button>
-      <button class="ic-btn rm" onclick="ocExcluir('${o.id}')" title="Excluir">×</button>
+      ${ ehGestor() ? `<button class="ic-btn rm" onclick="ocExcluir('${o.id}')" title="Excluir">×</button>` : "" }
     </td></tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab"><thead><tr><th>ID</th><th>Previsão</th><th>Fornecedor</th><th>Status</th><th class="num">Peso</th><th class="num">Valor</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="pager"><button ${ocPage<=1?"disabled":""} onclick="ocPage--;renderOC()">← Anterior</button><span class="pgnum">${ocPage}</span><button ${ocPage>=pages?"disabled":""} onclick="ocPage++;renderOC()">Próximo →</button></div>`;
@@ -2163,13 +2196,14 @@ function renderProc(stage){
   if(!lst.length){ box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted-2);padding:34px">Nenhum item encontrado.</td></tr></tbody></table></div>`; return; }
   const rows=slice.map(p=>{ const concl=(tab==="concluido"); const q= concl ? (stage==="imp"?p.imp.feito:p.acab.feito) : procDisp(stage,p);
     const delBtn=(stage==="imp" && ehGestor()) ? `<button class="delbtn" onclick="excluirProc('imp','${p.id}')" title="Excluir item">✕</button>` : "";
+    const ficBtn=(stage==="imp" && p.sku) ? `<button class="ficbtn" onclick="fichaPorSku('${String(p.sku).replace(/'/g,"\\'")}')" title="Ficha técnica">📄</button>` : "";
     return `<tr>
       <td><b>${esc(p.sku||"—")}</b></td>
       <td>${esc(p.ocId)}</td>
       <td>${p.c}×${p.l}×${p.a} mm</td>
       <td class="num">${(+q||0).toLocaleString("pt-BR")}</td>
       <td class="num">${(p.pesoUnit*q).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:3})} kg</td>
-      <td>${ concl ? `<div class="procacts"><span class="stb stb-rec">✓ Concluído</span>${delBtn}</div>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ (stage==="imp" && ehGestor()) ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }${delBtn}</div>` }</td>
+      <td>${ concl ? `<div class="procacts"><span class="stb stb-rec">✓ Concluído</span>${ficBtn}${delBtn}</div>` : `<div class="procacts"><button class="okbtn" onclick="concluirProc('${stage}','${p.id}')" title="Concluir item">✓</button>${ficBtn}${ (stage==="imp" && ehGestor()) ? `<button class="tercbtn" onclick="marcarTerceirizado('${p.id}')" title="Marcar como terceirizado">Terceirizado</button>` : "" }${delBtn}</div>` }</td>
     </tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab">${head}<tbody>${rows}</tbody></table></div>
     <div class="pager"><button ${page<=1?"disabled":""} onclick="${stage==="imp"?"impPage--":"acabPage--"};renderProc('${stage}')">← Anterior</button><span class="pgnum">${page}</span><button ${page>=pages?"disabled":""} onclick="${stage==="imp"?"impPage++":"acabPage++"};renderProc('${stage}')">Próximo →</button></div>`;
@@ -3074,6 +3108,7 @@ function repararHistorico(){
 }
 preencherSelects();
 render();
+appReady=true;
 try{ renderSyncScreen(); }catch(e){}
 (async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} try{ repararHistorico(); }catch(e){} })();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && syncOn){ flushPending().then(syncPull); } });
