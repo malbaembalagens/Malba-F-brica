@@ -137,21 +137,21 @@ input,select,textarea{font-family:inherit;font-size:15px}
   .chartcard{padding:11px;margin-top:12px}
   .charthead{margin-bottom:10px}
   .charthead h3{font-size:14px}
-  .stats{grid-template-columns:repeat(3,1fr);gap:7px}
-  .stat{padding:9px 8px;border-radius:11px}
-  .stat .l{font-size:10px;line-height:1.15}
-  .stat .v{font-size:15px;margin-top:2px}
-  .stat .sub{font-size:9.5px;margin-top:1px}
+  .stats{grid-template-columns:1fr;gap:8px}
+  .stat{display:flex;align-items:center;gap:10px;padding:12px 15px;border-radius:12px}
+  .stat .l{font-size:12.5px;line-height:1.2;flex:1}
+  .stat .v{font-size:20px;margin-top:0;white-space:nowrap}
+  .stat .sub{font-size:11px;margin-top:0;white-space:nowrap}
   .ringchart{gap:10px;padding:4px 0}
-  .ring{width:108px;height:108px}
-  .ringbig{min-width:120px}
+  .ring{width:104px;height:104px}
+  .ringbig{min-width:118px}
   .ringbig .rb-ton{font-size:18px}
   .ringbig .rb-qt{font-size:12px}
   .ringbig .rb-meta{font-size:11px}
   .metawrap{gap:12px;padding:4px 0}
-  .metatarget{width:100px;height:100px}
+  .metatarget{width:96px;height:96px}
   .recgrid{grid-template-columns:1fr;gap:10px}
-  .colchart{height:150px;padding-top:6px}
+  .colchart{height:140px;padding-top:6px}
   .collbl{font-size:9px}
   .colval{font-size:9px}
   .charttotal{padding:7px 10px}
@@ -628,7 +628,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v69 · dados salvos neste aparelho</div>
+    <div class="foot">v70 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
