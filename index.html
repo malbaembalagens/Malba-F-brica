@@ -619,7 +619,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v65 · dados salvos neste aparelho</div>
+    <div class="foot">v66 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -1050,7 +1050,7 @@ const LS = { orc:"malba_os_orcamentos_v1", seq:"malba_os_seq_v1", cli:"malba_os_
 
 // util
 function carregar(k,def){ try{ const v=JSON.parse(localStorage.getItem(k)); return (v===null||v===undefined)?def:v }catch(e){ return def } }
-function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); try{ if(appReady && typeof SYNC_KEYS!=="undefined" && SYNC_KEYS.includes(k)) setLocalMod(k); if(typeof syncPush==="function") syncPush(k); }catch(e){} }
+function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); try{ if(appReady){ if(typeof SYNC_KEYS!=="undefined" && SYNC_KEYS.includes(k)) setLocalMod(k); if(typeof syncPush==="function") syncPush(k); } }catch(e){} }
 function brl(n){ return "R$ " + (Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) }
 function hoje(){ return new Date() }
 function fmtData(iso){ return new Date(iso).toLocaleDateString("pt-BR") }
@@ -1136,6 +1136,13 @@ function syncSetStatus(s){ syncStatus=s; try{ renderSyncScreen(); }catch(e){} }
 function isEmptyVal(v){ return v==null || (Array.isArray(v)&&v.length===0) || (typeof v==="object"&&!Array.isArray(v)&&Object.keys(v).length===0); }
 function lsParse(k){ try{ const r=localStorage.getItem(k); return r==null?null:JSON.parse(r); }catch(e){ return null; } }
 function bakParse(s){ try{ return s==null?null:JSON.parse(s); }catch(e){ return null; } }
+function mergeByKey(localArr, cloudArr, idf){
+  const out=[], seen=new Set();
+  const add=x=>{ if(!x) return; const k=idf(x); if(k==null||seen.has(k)) return; out.push(x); seen.add(k); };
+  (Array.isArray(localArr)?localArr:[]).forEach(add);
+  (Array.isArray(cloudArr)?cloudArr:[]).forEach(add);
+  return out;
+}
 function mergeHist(localArr, cloudArr){
   const out=[], seenId=new Set(), seenSig=new Set();
   const sig=h=> (!h.sku && !(+h.qtdProd) && h.pesoTotalProd) ? ("MES|"+h.processo+"|"+h.data+"|"+h.pesoTotalProd) : null;
@@ -1185,6 +1192,12 @@ async function syncInit(){
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
           return;
         }
+        if(k===LS.devav){
+          const merged=mergeByKey(lsParse(k), cloud[k].value, x=>x.key), ms=JSON.stringify(merged);
+          localStorage.setItem(k, ms); syncVer[k]=cloud[k].updated_at;
+          if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
+          return;
+        }
         const cu=cloud[k].updated_at, lm=localMod(k);
         if(lm && cu && new Date(lm) > new Date(cu)){ pendingPush[k]=true; syncVer[k]=cu; return; }
         if(isEmptyVal(cloud[k].value) && !isEmptyVal(lsParse(k))){ pendingPush[k]=true; syncVer[k]=cu; return; }
@@ -1204,6 +1217,13 @@ async function syncPull(){
       if(cloud[k].updated_at && cloud[k].updated_at!==syncVer[k]){
         if(k===LS.hist){
           const merged=mergeHist(lsParse(k), cloud[k].value), ms=JSON.stringify(merged);
+          if(localStorage.getItem(k)!==ms){ localStorage.setItem(k,ms); changed=true; }
+          syncVer[k]=cloud[k].updated_at;
+          if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
+          return;
+        }
+        if(k===LS.devav){
+          const merged=mergeByKey(lsParse(k), cloud[k].value, x=>x.key), ms=JSON.stringify(merged);
           if(localStorage.getItem(k)!==ms){ localStorage.setItem(k,ms); changed=true; }
           syncVer[k]=cloud[k].updated_at;
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
