@@ -619,7 +619,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v66 · dados salvos neste aparelho</div>
+    <div class="foot">v67 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -935,7 +935,7 @@ tbody tr:hover{background:var(--surface-2)}
   <section id="tela-oc-nova" class="screen">
     <div class="topbar">
       <button class="back" onclick="cancelarOC()">‹</button>
-      <div class="tt"><small>MALBA Fábrica · Compras</small><h2>Nova ordem de compra</h2></div>
+      <div class="tt"><small>MALBA Fábrica · Compras</small><h2 id="ocnova-title">Nova ordem de compra</h2></div>
     </div>
     <div id="ocnova-body"></div>
   </section>
@@ -1985,6 +1985,7 @@ function renderOC(){
       <button class="ic-btn ed" onclick="ocDetalhes('${o.id}')" title="Detalhes">👁️</button>
       <button class="ic-btn pdf" onclick="ocPDF('${o.id}')" title="PDF da ordem">📄</button>
       <button class="ic-btn ${o.recebida?"":"ok"}" onclick="ocReceber('${o.id}')" title="${o.recebida?"Reabrir":"Marcar recebida"}">${o.recebida?"↩︎":"✓"}</button>
+      ${ ehGestor() ? `<button class="ic-btn ed" onclick="editarOC('${o.id}')" title="Editar">✏️</button>` : "" }
       ${ ehGestor() ? `<button class="ic-btn rm" onclick="ocExcluir('${o.id}')" title="Excluir">×</button>` : "" }
     </td></tr>`;}).join("");
   box.innerHTML=`<div class="tablewrap"><table class="htab"><thead><tr><th>ID</th><th>Previsão</th><th>Fornecedor</th><th>Status</th><th class="num">Peso</th><th class="num">Valor</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -2096,7 +2097,14 @@ function renderAgenda(){
 
 // ----- criação -----
 function ocTotais(o){ const sub=+o.valor||0; const ipi=sub*0.0325; return {peso:+o.peso||0, sub, ipi, total:sub+ipi}; }
-function abrirNovaOC(){ ocForm={ fornecedor:"", dataPrevista:hojeStr(), itens:[], _pickKey:"" }; window._ocb=""; window._ocq=""; show("tela-oc-nova"); renderNovaOC(); }
+function abrirNovaOC(){ ocForm={ editId:null, fornecedor:"", dataPrevista:hojeStr(), itens:[], _pickKey:"" }; window._ocb=""; window._ocq=""; const t=$("ocnova-title"); if(t)t.textContent="Nova ordem de compra"; show("tela-oc-nova"); renderNovaOC(); }
+function editarOC(id){
+  const o=ordens.find(x=>x.id===id); if(!o){ alert("Ordem não encontrada."); return; }
+  ocForm={ editId:id, fornecedor:o.fornecedor||"", dataPrevista:o.dataPrevista||hojeStr(),
+    itens:(o.itens||[]).map(i=>({ key:i.key||"", sku:i.sku||"", produto:i.produto||"", c:i.c, l:i.l, a:i.a, chapaComp:i.chapaComp, chapaLarg:i.chapaLarg, gram:i.gram, ondaNome:i.ondaNome, vincos:(i.vincos||[]).slice(), qtd:i.qtd, pesoUnit:i.pesoUnit })),
+    _pickKey:"" };
+  window._ocb=""; window._ocq=""; const t=$("ocnova-title"); if(t)t.textContent="Editar ordem de compra "+id; show("tela-oc-nova"); renderNovaOC();
+}
 function cancelarOC(){ show("tela-gestor"); irViewG("prod-ordem"); }
 function ocDevList(){ return devItems().filter(x=>x.status==="desenvolvido"); }
 function ocPickHtml(){
@@ -2129,8 +2137,13 @@ function salvarOC(){
   let peso=0, valor=0;
   const itens=ocForm.itens.map(i=>{ const p=i.pesoUnit*i.qtd, v=custoKg*p; peso+=p; valor+=v; return Object.assign({},i,{peso:p, custoUnit:custoKg*i.pesoUnit, valor:v}); });
   const ipi=valor*0.0325;
-  const id=ocNovoId(ocForm.dataPrevista);
-  ordens.push({ id, dataPrevista:ocForm.dataPrevista, fornecedor:ocForm.fornecedor, itens, peso, valor, ipi, valorTotal:valor+ipi, recebida:false });
+  if(ocForm.editId){
+    const o=ordens.find(x=>x.id===ocForm.editId);
+    if(o){ o.fornecedor=ocForm.fornecedor; o.dataPrevista=ocForm.dataPrevista; o.itens=itens; o.peso=peso; o.valor=valor; o.ipi=ipi; o.valorTotal=valor+ipi; }
+  } else {
+    const id=ocNovoId(ocForm.dataPrevista);
+    ordens.push({ id, dataPrevista:ocForm.dataPrevista, fornecedor:ocForm.fornecedor, itens, peso, valor, ipi, valorTotal:valor+ipi, recebida:false });
+  }
   salvar(LS.oc,ordens);
   show("tela-gestor"); irViewG("prod-ordem");
 }
