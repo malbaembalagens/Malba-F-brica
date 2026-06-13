@@ -628,7 +628,7 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="pcard" onclick="abrirGestor()"><div class="ic">📊</div><div class="tx"><b>Gestor</b><span>Dashboard, produção e cadastros</span></div><div class="arr">›</div></button>
     </div>
     <button class="synclink" onclick="abrirSync()"><span id="sync-dot" class="sync-dot"></span> Sincronização entre aparelhos</button>
-    <div class="foot">v68 · dados salvos neste aparelho</div>
+    <div class="foot">v69 · dados salvos neste aparelho</div>
   </section>
 
   <!-- ============ SINCRONIZAÇÃO ============ -->
@@ -659,7 +659,6 @@ tbody tr:hover{background:var(--surface-2)}
 
       <div class="synccard" id="sync-actions">
         <button class="btn ghost full" onclick="syncAgora()">🔄 Sincronizar agora</button>
-        <button class="btn ghost full" onclick="recuperarBackup()">⏪ Recuperar dados do backup</button>
         <button class="btn ghost full danger" onclick="syncDesconectar()">Desconectar este aparelho</button>
       </div>
 
@@ -1152,6 +1151,7 @@ function mergeByKey(localArr, cloudArr, idf){
   (Array.isArray(cloudArr)?cloudArr:[]).forEach(add);
   return out;
 }
+function devIdent(x){ const s=(x&&x.sku!=null)?String(x.sku).trim().toLowerCase():""; return s ? ("sku:"+s) : ("key:"+((x&&x.key)||"")); }
 function mergeHist(localArr, cloudArr){
   const out=[], seenId=new Set(), seenSig=new Set();
   const sig=h=> (!h.sku && !(+h.qtdProd) && h.pesoTotalProd) ? ("MES|"+h.processo+"|"+h.data+"|"+h.pesoTotalProd) : null;
@@ -1202,7 +1202,7 @@ async function syncInit(){
           return;
         }
         if(k===LS.devav){
-          const merged=mergeByKey(lsParse(k), cloud[k].value, x=>x.key), ms=JSON.stringify(merged);
+          const merged=mergeByKey(lsParse(k), cloud[k].value, devIdent), ms=JSON.stringify(merged);
           localStorage.setItem(k, ms); syncVer[k]=cloud[k].updated_at;
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
           return;
@@ -1232,7 +1232,7 @@ async function syncPull(){
           return;
         }
         if(k===LS.devav){
-          const merged=mergeByKey(lsParse(k), cloud[k].value, x=>x.key), ms=JSON.stringify(merged);
+          const merged=mergeByKey(lsParse(k), cloud[k].value, devIdent), ms=JSON.stringify(merged);
           if(localStorage.getItem(k)!==ms){ localStorage.setItem(k,ms); changed=true; }
           syncVer[k]=cloud[k].updated_at;
           if(ms!==JSON.stringify(cloud[k].value)) pendingPush[k]=true;
@@ -3148,11 +3148,16 @@ function repararHistorico(){
   if(added){ salvar(LS.hist,historico); try{ renderDashProd(); }catch(e){} }
   localStorage.setItem("malba_os_hist_rep_v1","1");
 }
+function dedupDevAvulsos(){
+  const seen=new Set(); const out=[];
+  devAvulsos.forEach(x=>{ const id=devIdent(x); if(seen.has(id)) return; seen.add(id); out.push(x); });
+  if(out.length!==devAvulsos.length){ devAvulsos=out; salvar(LS.devav,devAvulsos); try{ render(); }catch(e){} }
+}
 preencherSelects();
 render();
 appReady=true;
 try{ renderSyncScreen(); }catch(e){}
-(async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} try{ repararHistorico(); }catch(e){} })();
+(async()=>{ try{ await syncInit(); }catch(e){} try{ repararOrdens(); }catch(e){} try{ repararHistorico(); }catch(e){} try{ dedupDevAvulsos(); }catch(e){} })();
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && syncOn){ flushPending().then(syncPull); } });
 </script>
 </body>
